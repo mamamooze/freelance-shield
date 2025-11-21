@@ -8,7 +8,7 @@ icon_path = "logo.png"
 page_icon = icon_path if os.path.exists(icon_path) else "🛡️"
 
 st.set_page_config(
-    page_title="Freelance Shield",
+    page_title="Freelance Shield Pro",
     page_icon=page_icon,
     layout="centered",
     initial_sidebar_state="expanded",
@@ -20,7 +20,7 @@ st.markdown(
     <style>
         /* Main background with Image and Dimmer */
         .stApp {
-            background-image: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), 
+            background-image: linear-gradient(rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)), 
             url("https://raw.githubusercontent.com/mamamooze/freelance-shield/main/background.png");
             background-size: cover;
             background-position: center;
@@ -41,7 +41,7 @@ st.markdown(
             text-shadow: 0px 2px 4px rgba(0,0,0,0.5);
         }
         
-        .stSubheader, p, label {
+        .stSubheader, p, label, .stCheckbox label {
             color: #dcdcdc !important;
             font-family: 'Helvetica Neue', sans-serif;
         }
@@ -55,17 +55,19 @@ st.markdown(
 
         /* Button styling */
         .stButton>button {
-            background-color: #3498db;
+            background-color: #2ecc71;
             color: white;
             border-radius: 8px;
             border: none;
-            padding: 10px 24px;
-            font-weight: 600;
+            padding: 12px 24px;
+            font-weight: 700;
             transition: all 0.3s ease;
             width: 100%;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
         .stButton>button:hover {
-            background-color: #2980b9;
+            background-color: #27ae60;
             box-shadow: 0 4px 8px rgba(0,0,0,0.3);
         }
     </style>
@@ -73,61 +75,79 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# --- LEGAL DATABASE ---
+# --- LEGAL DATABASE (ANNEXURE EDITION) ---
 contract_clauses = {
     "scope_of_work": (
         "1. SCOPE OF WORK & DELIVERABLES\n"
-        "The Provider agrees to perform the following services ('Services') for the Client:\n\n"
-        "[SCOPE_DETAILS]\n\n"
-        "Any request by the Client for alterations or tasks not listed above shall be considered 'Scope Creep' "
-        "and will require a written 'Change Order' with additional compensation."
+        "The Provider agrees to perform the services ('Services') explicitly detailed in \"ANNEXURE A\" attached to this Agreement. "
+        "Any task not listed in Annexure A is considered out of scope.\n\n"
+        "CHANGE ORDERS: Any request by the Client for alterations, additions, or modifications that deviate from the Scope ('Scope Creep') "
+        "must be made in writing and will be billed additionally at the rate of [HOURLY_RATE] per hour."
     ),
     "payment_terms": (
         "2. PAYMENT TERMS & STATUTORY INTEREST (MSME ACT)\n"
-        "In consideration for the Services, the Client agrees to pay the Provider the Total Project Fee of [PROJECT_COST]. "
-        "Execution of this Agreement is contingent upon a mandatory, non-refundable advance payment of [ADVANCE_PERCENT]% of the Total Project Fee. "
-        "Services shall commence strictly upon realization of this advance.\n\n"
+        "Total Project Fee: [PROJECT_COST] [GST_CLAUSE]\n"
+        "Advance Payment: [ADVANCE_PERCENT]% (Non-refundable). Work commences only upon realization of advance.\n\n"
         "STATUTORY NOTICE: Pursuant to the Micro, Small and Medium Enterprises Development Act, 2006 (MSMED Act), "
         "time is of the essence regarding payments. Any outstanding balance must be cleared within forty-five (45) days.\n\n"
-        "In the event of a delay, the Client shall be liable to pay compound interest with monthly rests to the Provider "
+        "LATE FEES: In the event of a delay, the Client shall be liable to pay compound interest with monthly rests to the Provider "
         "at three times (3x) the bank rate notified by the Reserve Bank of India (Section 16, MSMED Act, 2006)."
     ),
     "intellectual_property": (
         "3. INTELLECTUAL PROPERTY RIGHTS & LIEN\n"
         "The transfer of Intellectual Property Rights (IPR), copyright, and ownership of all source files, designs, and assets "
         "is strictly conditional upon the full and final realization of the Total Project Fee. "
-        "Until the final invoice is cleared, the Provider retains a 'General Lien' and full legal title over all deliverables."
+        "Until the final invoice is cleared, the Provider retains a 'General Lien' and full legal title over all deliverables.\n\n"
+        "UNAUTHORIZED USE: Usage of the work product prior to full payment constitutes an unauthorized use and infringement of rights under the Copyright Act, 1957."
     ),
-    "cancellation_policy": (
-        "4. TERMINATION & CANCELLATION\n"
-        "In the event the Client cancels the project or becomes unresponsive for a period exceeding fourteen (14) days ('Ghosting'), "
-        "this Agreement shall be deemed terminated. The Advance Payment shall be forfeited as a cancellation fee, "
-        "and all rights to the work shall revert immediately to the Provider."
+    "confidentiality": (
+        "4. CONFIDENTIALITY\n"
+        "Both parties agree to maintain strict confidentiality regarding proprietary information, business strategies, and trade secrets. "
+        "This obligation survives the termination of this Agreement for a period of two (2) years."
+    ),
+    "termination": (
+        "5. TERMINATION & CANCELLATION\n"
+        "BY CLIENT: If the Client cancels the project or becomes unresponsive for >14 days ('Ghosting'), the Agreement is terminated by default. "
+        "The Advance Payment is forfeited as a cancellation fee.\n\n"
+        "BY PROVIDER: The Provider may terminate if the Client fails to make payments within agreed timelines or engages in abusive conduct. "
+        "In such cases, the Client remains liable for all work completed up to the date of termination."
+    ),
+    "liability": (
+        "6. LIMITATION OF LIABILITY & WARRANTY\n"
+        "The Services are provided on an 'as-is' basis. The Provider makes no specific warranty regarding fitness for a particular purpose. "
+        "LIMITATION: The Provider's total liability under this Agreement shall strictly NOT EXCEED the Total Project Fee paid by the Client. "
+        "In no event shall the Provider be liable for indirect, consequential, or punitive damages."
+    ),
+    "jurisdiction": (
+        "7. DISPUTE RESOLUTION & JURISDICTION\n"
+        "This Agreement shall be governed by the laws of India. "
+        "Any dispute arising out of this Agreement shall be subject to the exclusive jurisdiction of the courts in [CITY], India."
     )
 }
 
 # --- APP LOGIC ---
 
-# Logo Display
 if os.path.exists("logo.png"):
     st.image("logo.png", width=150)
 
-st.title("Freelance Shield")
-st.subheader("Generate watertight, MSME-protected contracts.")
+st.title("Freelance Shield Pro")
+st.subheader("Generate Bulletproof, MSME-Protected Contracts.")
 
 # Sidebar Inputs
 with st.sidebar:
     st.header("📝 Project Details")
     freelancer_name = st.text_input("Provider Name (You)", "Amit Kumar")
     client_name = st.text_input("Client Name", "Tech Solutions Pvt Ltd")
+    jurisdiction_city = st.text_input("Your City (For Courts)", "Bengaluru, Karnataka")
+    gst_registered = st.checkbox("Are you GST Registered?")
     
-    # SCOPE OF WORK (NEW FEATURE)
     st.markdown("---")
-    st.caption("👇 Define exactly what you are doing:")
+    st.caption("👇 Define Scope & Acceptance Criteria:")
+    # Updated placeholder to guide user to adding "Criteria"
     scope_work = st.text_area(
-        "Scope of Work (List items)", 
-        "1. Design 5 Social Media Posts\n2. Edit 1 Promotional Video (60s)\n3. Provide Source Files",
-        height=150
+        "Scope of Work (Annexure A)", 
+        "1. DELIVERABLE: 5 Social Media Posts\n   - CRITERIA: High-res PNG format, approved by marketing lead.\n\n2. DELIVERABLE: 1 Promotional Video (60s)\n   - CRITERIA: 1080p, includes subtitles, background music cleared.",
+        height=200
     )
     
     st.markdown("---")
@@ -139,16 +159,16 @@ with st.sidebar:
     st.caption("🔒 Privacy First: No data is saved.")
 
 # Generate Button
-if st.button("Generate Custom Contract", type="primary"):
+if st.button("Generate Professional Contract", type="primary"):
     
     # 1. SANITIZE INPUTS
     safe_cost = project_cost.replace("₹", "Rs. ").strip()
     safe_rate = hourly_rate.replace("₹", "Rs. ").strip()
-    # We sanitize scope input to prevent weird characters breaking PDF
-    safe_scope = scope_work.replace("₹", "Rs. ") 
+    safe_scope = scope_work.replace("₹", "Rs. ")
+    gst_text = "(Exclusive of GST)" if gst_registered else ""
     
     # 2. BUILD THE HEADER
-    full_contract_text = "FREELANCE SERVICE AGREEMENT\n"
+    full_contract_text = "PROFESSIONAL SERVICE AGREEMENT\n"
     full_contract_text += f"Date: {datetime.date.today().strftime('%B %d, %Y')}\n\n"
     full_contract_text += "BETWEEN:\n"
     full_contract_text += f"PROVIDER: {freelancer_name}\n"
@@ -156,36 +176,37 @@ if st.button("Generate Custom Contract", type="primary"):
     full_contract_text += f"CLIENT: {client_name}\n\n"
     full_contract_text += "-"*60 + "\n\n"
     
-    # 3. BUILD THE CLAUSES
+    # 3. BUILD THE MAIN CLAUSES
     for key, clause in contract_clauses.items():
         filled_clause = clause.replace("[CLIENT_NAME]", client_name)\
                               .replace("[FREELANCER_NAME]", freelancer_name)\
                               .replace("[PROJECT_COST]", safe_cost)\
                               .replace("[ADVANCE_PERCENT]", str(advance_percent))\
                               .replace("[HOURLY_RATE]", safe_rate)\
-                              .replace("[SCOPE_DETAILS]", safe_scope) # Injecting the scope
+                              .replace("[CITY]", jurisdiction_city)\
+                              .replace("[GST_CLAUSE]", gst_text)
         full_contract_text += filled_clause + "\n\n"
 
-    # 4. BUILD THE SIGNATURE BLOCK
+    # 4. SIGNATURE BLOCK
     full_contract_text += "-"*60 + "\n"
-    full_contract_text += "IN WITNESS WHEREOF, the parties have executed this Agreement as of the date first above written.\n\n"
-    full_contract_text += "SIGNED BY THE PROVIDER:\n\n"
+    full_contract_text += "IN WITNESS WHEREOF, the parties have executed this Agreement.\n\n"
+    full_contract_text += "SIGNED BY PROVIDER:\n\n"
     full_contract_text += "_________________________\n"
     full_contract_text += f"(Signature)\n{freelancer_name}\n\n"
-    full_contract_text += "SIGNED BY THE CLIENT:\n\n"
+    full_contract_text += "SIGNED BY CLIENT:\n\n"
     full_contract_text += "_________________________\n"
     full_contract_text += f"(Signature)\n{client_name}\n"
 
-    # Show Preview
+    # Show Preview (Main Text Only)
     with st.container():
-        st.markdown("### 📄 Contract Preview")
-        st.text_area("Copy text below:", full_contract_text, height=450)
+        st.markdown("### 📄 Contract Preview (Annexure attached in PDF)")
+        st.text_area("Main Terms:", full_contract_text, height=300)
 
     # PDF Generator
     pdf = FPDF()
-    pdf.add_page()
     
-    # Logo Logic
+    # --- PAGE 1 & 2: MAIN CONTRACT ---
+    pdf.add_page()
     if os.path.exists("logo.png"):
         try:
             pdf.image("logo.png", 10, 8, 25)
@@ -193,20 +214,35 @@ if st.button("Generate Custom Contract", type="primary"):
         except:
             pass 
     
-    pdf.set_font("Arial", size=11)
+    pdf.set_font("Arial", size=10)
     
     try:
+        # Print Main Contract
         clean_text = full_contract_text.encode('latin-1', 'replace').decode('latin-1')
-        pdf.multi_cell(0, 6, clean_text)
+        pdf.multi_cell(0, 5, clean_text)
+        
+        # --- PAGE 3: ANNEXURE A (Scope of Work) ---
+        pdf.add_page() # FORCE NEW PAGE
+        
+        # Add Header for Annexure
+        pdf.set_font("Arial", 'B', size=12)
+        pdf.cell(0, 10, "ANNEXURE A: SCOPE OF WORK & ACCEPTANCE CRITERIA", ln=True, align='L')
+        pdf.ln(5)
+        
+        # Print Scope Text
+        pdf.set_font("Arial", size=10)
+        clean_scope = safe_scope.encode('latin-1', 'replace').decode('latin-1')
+        pdf.multi_cell(0, 6, clean_scope)
+        
         pdf_output = pdf.output(dest='S').encode('latin-1')
         
         st.download_button(
-            label="⬇️ Download Signed PDF",
+            label="⬇️ Download Signed PDF (Includes Annexure)",
             data=pdf_output,
-            file_name="Custom_Service_Agreement.pdf",
+            file_name="Bulletproof_Service_Agreement.pdf",
             mime="application/pdf"
         )
     except Exception as e:
         st.error(f"PDF Generation Error: {e}")
 
-    st.success("✅ Custom Contract Generated.")
+    st.success("✅ Bulletproof Contract Generated (With Annexure).")
