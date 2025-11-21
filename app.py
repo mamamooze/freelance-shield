@@ -3,10 +3,15 @@ from fpdf import FPDF
 import datetime
 import os
 
-# --- PAGE CONFIGURATION ---
+# --- 1. SETUP & FAVICON (Browser Tab Logo) ---
+# We check if logo.png exists. If yes, we use it as the favicon.
+# If not, we fallback to the shield emoji.
+icon_path = "logo.png"
+page_icon = icon_path if os.path.exists(icon_path) else "🛡️"
+
 st.set_page_config(
     page_title="Freelance Shield",
-    page_icon="🛡️",
+    page_icon=page_icon,  # <--- THIS SETS THE BROWSER TAB LOGO
     layout="centered",
     initial_sidebar_state="expanded",
 )
@@ -115,10 +120,9 @@ contract_clauses = {
 
 # --- APP LOGIC ---
 
-# Logo Display
-logo_path = "logo.png"
-if os.path.exists(logo_path):
-    st.image(logo_path, width=150)
+# Website Logo Display
+if os.path.exists("logo.png"):
+    st.image("logo.png", width=150)
 
 st.title("Freelance Shield")
 st.subheader("Generate watertight, MSME-protected contracts.")
@@ -128,19 +132,16 @@ with st.sidebar:
     st.header("📝 Agreement Details")
     freelancer_name = st.text_input("Provider Name (You)", "Amit Kumar")
     client_name = st.text_input("Client Name", "Tech Solutions Pvt Ltd")
-    
-    # Auto-formatting help
     project_cost = st.text_input("Total Project Fee", "Rs. 50,000")
     advance_percent = st.slider("Advance Required (%)", 0, 100, 50)
     hourly_rate = st.text_input("Overtime/Hourly Rate", "Rs. 2,000")
-    
     st.markdown("---")
-    st.caption("🔒 Privacy First: No data is saved on our servers.")
+    st.caption("🔒 Privacy First: No data is saved.")
 
 # Generate Button
 if st.button("Generate Professional Contract", type="primary"):
     
-    # 1. SANITIZE INPUTS (Fix the ₹ to Rs issue)
+    # 1. SANITIZE INPUTS
     safe_cost = project_cost.replace("₹", "Rs. ").strip()
     safe_rate = hourly_rate.replace("₹", "Rs. ").strip()
     
@@ -162,14 +163,12 @@ if st.button("Generate Professional Contract", type="primary"):
                               .replace("[HOURLY_RATE]", safe_rate)
         full_contract_text += filled_clause + "\n\n"
 
-    # 4. BUILD THE SIGNATURE BLOCK (Crucial for "Professional" look)
+    # 4. BUILD THE SIGNATURE BLOCK
     full_contract_text += "-"*60 + "\n"
     full_contract_text += "IN WITNESS WHEREOF, the parties have executed this Agreement as of the date first above written.\n\n"
-    
     full_contract_text += "SIGNED BY THE PROVIDER:\n\n"
     full_contract_text += "_________________________\n"
     full_contract_text += f"(Signature)\n{freelancer_name}\n\n"
-    
     full_contract_text += "SIGNED BY THE CLIENT:\n\n"
     full_contract_text += "_________________________\n"
     full_contract_text += f"(Signature)\n{client_name}\n"
@@ -182,13 +181,23 @@ if st.button("Generate Professional Contract", type="primary"):
     # PDF Generator logic
     pdf = FPDF()
     pdf.add_page()
+    
+    # --- LOGO IN PDF LOGIC ---
+    # This puts the logo in the top-left corner of the PDF
+    if os.path.exists("logo.png"):
+        # Arguments: Name, X position, Y position, Width
+        try:
+            pdf.image("logo.png", 10, 8, 25)
+            pdf.ln(20) # Move cursor down so text doesn't overlap logo
+        except:
+            pass # If logo fails, just keep generating text
+    
     pdf.set_font("Arial", size=11)
     
-    # Fix encoding for PDF (Latin-1 conversion)
-    # This ensures Rs. prints correctly and doesn't crash
+    # Fix encoding for PDF
     try:
         clean_text = full_contract_text.encode('latin-1', 'replace').decode('latin-1')
-        pdf.multi_cell(0, 6, clean_text) # 6 is line height
+        pdf.multi_cell(0, 6, clean_text)
         pdf_output = pdf.output(dest='S').encode('latin-1')
         
         st.download_button(
