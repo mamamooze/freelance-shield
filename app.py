@@ -10,7 +10,7 @@ page_icon = icon_path if os.path.exists(icon_path) else "🛡️"
 st.set_page_config(
     page_title="Freelance Shield Pro",
     page_icon=page_icon,
-    layout="wide",  # <--- CHANGED TO WIDE FOR BETTER LAYOUT
+    layout="wide",
     initial_sidebar_state="expanded",
 )
 
@@ -80,7 +80,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# --- SESSION STATE ---
+# --- SESSION STATE (FIXED SYNC LOGIC) ---
 if 'advance_rate' not in st.session_state:
     st.session_state.advance_rate = 50
 
@@ -175,16 +175,20 @@ with st.sidebar:
     
     st.write("Advance Required (%)")
     c1, c2 = st.columns([3, 1])
+    
+    # --- FIXED SYNC LOGIC HERE ---
+    # We added 'value=st.session_state.advance_rate' to both inputs
     with c1:
-        st.slider("Slider", 0, 100, key="slider_key", on_change=update_slider, label_visibility="collapsed")
+        st.slider("Slider", 0, 100, value=st.session_state.advance_rate, key="slider_key", on_change=update_slider, label_visibility="collapsed")
     with c2:
-        st.number_input("Num", 0, 100, key="num_key", on_change=update_num, label_visibility="collapsed")
+        st.number_input("Num", 0, 100, value=st.session_state.advance_rate, key="num_key", on_change=update_num, label_visibility="collapsed")
+    
     advance_percent = st.session_state.advance_rate
     
     st.markdown("---")
     generate_btn = st.button("🚀 Generate Contract", type="primary")
 
-# --- MAIN SCREEN CONTENT (FILLING THE VOID) ---
+# --- MAIN SCREEN CONTENT ---
 
 if not generate_btn:
     # 1. FEATURES GRID
@@ -291,7 +295,7 @@ if generate_btn:
         pdf_output = pdf.output(dest='S').encode('latin-1')
         
         with col_dl:
-            st.write("\n") # Spacer
+            st.write("\n")
             st.write("\n")
             st.download_button(
                 label="⬇️ Download PDF",
