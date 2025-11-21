@@ -80,15 +80,19 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# --- SESSION STATE (FIXED SYNC LOGIC) ---
+# --- SESSION STATE (FORCE SYNC FIX) ---
 if 'advance_rate' not in st.session_state:
     st.session_state.advance_rate = 50
 
-def update_slider():
+# When Slider Moves: Update global rate AND the text box key
+def update_from_slider():
     st.session_state.advance_rate = st.session_state.slider_key
+    st.session_state.num_key = st.session_state.slider_key
 
-def update_num():
+# When Box Changes: Update global rate AND the slider key
+def update_from_num():
     st.session_state.advance_rate = st.session_state.num_key
+    st.session_state.slider_key = st.session_state.num_key
 
 # --- LEGAL DATABASE ---
 contract_clauses = {
@@ -176,12 +180,12 @@ with st.sidebar:
     st.write("Advance Required (%)")
     c1, c2 = st.columns([3, 1])
     
-    # --- FIXED SYNC LOGIC HERE ---
-    # We added 'value=st.session_state.advance_rate' to both inputs
+    # --- FORCE SYNC WIDGETS ---
+    # Note: We manually set the keys to match the session state logic above
     with c1:
-        st.slider("Slider", 0, 100, value=st.session_state.advance_rate, key="slider_key", on_change=update_slider, label_visibility="collapsed")
+        st.slider("Slider", 0, 100, key="slider_key", value=st.session_state.advance_rate, on_change=update_from_slider, label_visibility="collapsed")
     with c2:
-        st.number_input("Num", 0, 100, value=st.session_state.advance_rate, key="num_key", on_change=update_num, label_visibility="collapsed")
+        st.number_input("Num", 0, 100, key="num_key", value=st.session_state.advance_rate, on_change=update_from_num, label_visibility="collapsed")
     
     advance_percent = st.session_state.advance_rate
     
