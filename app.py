@@ -1,14 +1,6 @@
 # app.py
-"""
-Single-file Streamlit app:
-- polished multi-step UI
-- live HTML preview
-- PDF generation (reportlab preferred; fallback to fpdf)
-- SMTP email send with PDF attachment
-- ready-made e-sign payload templates and instructions
-"""
-
 import streamlit as st
+from fpdf import FPDF
 import datetime
 import os
 import io
@@ -17,25 +9,9 @@ import json
 from email.message import EmailMessage
 import smtplib
 
-# prefer reportlab for robust UTF-8 handling
-try:
-    from reportlab.lib.pagesizes import A4
-    from reportlab.pdfbase import pdfmetrics
-    from reportlab.pdfbase.ttfonts import TTFont
-    from reportlab.pdfgen import canvas
-    REPORTLAB_AVAILABLE = True
-except Exception:
-    REPORTLAB_AVAILABLE = False
-
-# fallback to FPDF if reportlab not available
-try:
-    from fpdf import FPDF
-    FPDF_AVAILABLE = True
-except Exception:
-    FPDF_AVAILABLE = False
-
-# -------- CONFIG --------
-LOGO_PATH = "/mnt/data/2c42bfe0-e688-4517-82b4-c829149f2bae.png"  # uploaded image path
+# -------- ASSET: use the uploaded PNG logo (exact path) ----------
+# developer requested the uploaded file path be used as the logo url
+LOGO_PATH = "/mnt/data/aee8022b-3e6e-40f0-b80b-1bf200509a79.png"
 PAGE_ICON = LOGO_PATH if os.path.exists(LOGO_PATH) else "🛡️"
 
 st.set_page_config(page_title="Freelance Shield Pro",
@@ -43,25 +19,23 @@ st.set_page_config(page_title="Freelance Shield Pro",
                    layout="wide",
                    initial_sidebar_state="auto")
 
-# -------- STYLES --------
+# -------- SIMPLE CSS ----------
 st.markdown(
     f"""
     <style>
-    :root{{--panel:#0f1724; --muted:#94a3b8; --accent:#2563eb}}
-    .stApp {{ background: linear-gradient(rgba(10,10,12,0.95), rgba(10,10,12,0.9)), url('{LOGO_PATH}') no-repeat center; background-size: cover; }}
+    .stApp{{background: linear-gradient(rgba(10,10,12,0.95), rgba(10,10,12,0.9));}}
     .hero-title{{font-size:2.2rem; font-weight:800; color:#fff; margin:0;}}
-    .hero-sub{{color:var(--muted); margin-top:6px; font-size:1.05rem}}
-    .trust-badge{{background:rgba(255,255,255,0.03); padding:6px 10px; border-radius:6px; color:var(--muted); font-weight:600}}
+    .hero-sub{{color:#94a3b8; margin-top:6px; font-size:1.05rem}}
+    .trust-badge{{background:rgba(255,255,255,0.03); padding:6px 10px; border-radius:6px; color:#94a3b8; font-weight:600}}
     .stButton>button{{background:linear-gradient(90deg,#3b82f6,#2563eb); color:#fff; border-radius:8px; padding:10px 18px;}}
     [data-testid="stSidebar"]{{background:#071024; color:#cbd5e1}}
     .panel{{background:rgba(255,255,255,0.03); padding:16px; border-radius:10px;}}
-    .muted{{color:var(--muted)}}
     </style>
     """,
     unsafe_allow_html=True,
 )
 
-# -------- SESSION STATE defaults --------
+# -------- Session defaults ----------
 if "step" not in st.session_state:
     st.session_state.step = 1
 if "scope_templates" not in st.session_state:
@@ -72,7 +46,7 @@ if "scope_templates" not in st.session_state:
         "Web Development": "1. DELIVERABLE: 5-Page WordPress Site\n   - CRITERIA: Mobile responsive, speed > 80.\n2. EXCLUSION: Domain & hosting fees."
     }
 
-# -------- HELPERS --------
+# -------- Helpers ----------
 def build_contract(values: dict) -> str:
     date = datetime.date.today().strftime("%B %d, %Y")
     gst_note = "(Exclusive of GST)" if values.get("gst_registered") else ""
@@ -98,96 +72,7 @@ def build_contract(values: dict) -> str:
     ]
     return "\n\n".join(sections)
 
-def generate_pdf_reportlab(contract_text: str, scope_text: str, logo_path: str = None) -> bytes:
-    """Generate a PDF using reportlab (supports UTF-8). Returns bytes."""
-    buffer = io.BytesIO()
-    c = canvas.Canvas(buffer, pagesize=A4)
-    width, height = A4
-
-    # Register a TTF font if available for proper UTF-8 rendering
-    # Try to register a common font; if not found, fallback to default
-    try:
-        # Attempt to register DejaVu if available in system fonts
-        font_path = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
-        if os.path.exists(font_path):
-            pdfmetrics.registerFont(TTFont("DejaVu", font_path))
-            font_name = "DejaVu"
-        else:
-            font_name = "Helvetica"
-    except Exception:
-        font_name = "Helvetica"
-
-    y = height - 50
-    if logo_path and os.path.exists(logo_path):
-        try:
-            c.drawImage(logo_path, 40, y - 40, width=120, preserveAspectRatio=True, mask='auto')
-            y -= 70
-        except Exception:
-            pass
-
-    c.setFont(font_name, 12)
-    lines = contract_text.splitlines()
-    left_margin = 40
-    max_width = width - 2 * left_margin
-    for line in lines:
-        # wrap long lines simply
-        if c.stringWidth(line, font_name, 12) < max_width:
-            c.drawString(left_margin, y, line)
-            y -= 16
-        else:
-            # naive wrap
-            words = line.split()
-            cur_line = ""
-            for w in words:
-                test = (cur_line + " " + w).strip()
-                if c.stringWidth(test, font_name, 12) < max_width:
-                    cur_line = test
-                else:
-                    c.drawString(left_margin, y, cur_line)
-                    y -= 16
-                    cur_line = w
-            if cur_line:
-                c.drawString(left_margin, y, cur_line)
-                y -= 16
-        if y < 80:
-            c.showPage()
-            y = height - 50
-            c.setFont(font_name, 12)
-
-    # Annexure page
-    c.showPage()
-    c.setFont(font_name, 12)
-    c.drawString(left_margin, height - 50, "ANNEXURE A: SCOPE OF WORK")
-    y = height - 80
-    for line in scope_text.splitlines():
-        if c.stringWidth(line, font_name, 12) < max_width:
-            c.drawString(left_margin, y, line)
-            y -= 16
-        else:
-            words = line.split()
-            cur_line = ""
-            for w in words:
-                test = (cur_line + " " + w).strip()
-                if c.stringWidth(test, font_name, 12) < max_width:
-                    cur_line = test
-                else:
-                    c.drawString(left_margin, y, cur_line)
-                    y -= 16
-                    cur_line = w
-            if cur_line:
-                c.drawString(left_margin, y, cur_line)
-                y -= 16
-        if y < 60:
-            c.showPage()
-            y = height - 50
-            c.setFont(font_name, 12)
-
-    c.save()
-    buffer.seek(0)
-    return buffer.read()
-
 def generate_pdf_fpdf(contract_text: str, scope_text: str, logo_path: str = None) -> bytes:
-    """Fallback PDF generation using FPDF (latin-1 fallback)."""
     pdf = FPDF()
     pdf.add_page()
     if logo_path and os.path.exists(logo_path):
@@ -210,18 +95,47 @@ def generate_pdf_fpdf(contract_text: str, scope_text: str, logo_path: str = None
     return pdf.output(dest="S").encode("latin-1")
 
 def pdf_bytes(contract_text: str, scope_text: str) -> bytes:
-    if REPORTLAB_AVAILABLE:
-        return generate_pdf_reportlab(contract_text, scope_text, LOGO_PATH)
-    elif FPDF_AVAILABLE:
+    # Prefer reportlab if installed for better UTF-8; fallback to FPDF (kept simple here)
+    try:
+        # lazy import to avoid requiring reportlab
+        from reportlab.lib.pagesizes import A4
+        from reportlab.pdfgen import canvas
+        import io
+        buffer = io.BytesIO()
+        c = canvas.Canvas(buffer, pagesize=A4)
+        width, height = A4
+        y = height - 50
+        if os.path.exists(LOGO_PATH):
+            try:
+                c.drawImage(LOGO_PATH, 40, y - 40, width=120, preserveAspectRatio=True, mask='auto')
+                y -= 70
+            except Exception:
+                pass
+        c.setFont("Helvetica", 10)
+        for line in contract_text.splitlines():
+            c.drawString(40, y, line)
+            y -= 14
+            if y < 80:
+                c.showPage()
+                y = height - 50
+        c.showPage()
+        c.drawString(40, height - 50, "ANNEXURE A: SCOPE OF WORK")
+        y = height - 80
+        for line in scope_text.splitlines():
+            c.drawString(40, y, line)
+            y -= 14
+            if y < 60:
+                c.showPage()
+                y = height - 50
+        c.save()
+        buffer.seek(0)
+        return buffer.read()
+    except Exception:
+        # fallback
         return generate_pdf_fpdf(contract_text, scope_text, LOGO_PATH)
-    else:
-        raise RuntimeError("No PDF library available. Install reportlab or fpdf.")
 
 def send_email_with_attachment(smtp_host: str, smtp_port: int, smtp_user: str, smtp_password: str,
                                to_email: str, subject: str, body: str, attachment_bytes: bytes, attachment_name: str):
-    """
-    Send a simple email via SMTP with PDF attachment. Credentials are used only for this call.
-    """
     msg = EmailMessage()
     msg["From"] = smtp_user
     msg["To"] = to_email
@@ -234,36 +148,7 @@ def send_email_with_attachment(smtp_host: str, smtp_port: int, smtp_user: str, s
         s.login(smtp_user, smtp_password)
         s.send_message(msg)
 
-# E-SIGN payload templates (no calls, just templates & instructions)
-def example_esign_payload_docu_sign(contract_bytes_b64: str, recipient_name: str, recipient_email: str):
-    """
-    Returns an example JSON payload for DocuSign-like APIs.
-    You will still need to follow provider docs and attach authentication.
-    """
-    payload = {
-        "documents": [
-            {
-                "documentBase64": contract_bytes_b64,
-                "name": "Freelance_Agreement.pdf",
-                "fileExtension": "pdf",
-                "documentId": "1"
-            }
-        ],
-        "recipients": {
-            "signers": [
-                {
-                    "email": recipient_email,
-                    "name": recipient_name,
-                    "recipientId": "1",
-                    "routingOrder": "1"
-                }
-            ]
-        },
-        "status": "sent"
-    }
-    return payload
-
-# -------- SIDEBAR --------
+# -------- SIDEBAR ----------
 with st.sidebar:
     if os.path.exists(LOGO_PATH):
         st.image(LOGO_PATH, width=140)
@@ -272,26 +157,15 @@ with st.sidebar:
     st.markdown("- Anti-ghosting: auto-termination protection")
     st.markdown("- IP lock: you retain rights until payment clears")
     st.markdown("---")
-    st.markdown("### Tools")
-    st.write("Use the steps to the left. Nothing is stored permanently.")
-    st.markdown("---")
-    st.markdown("### Quick help")
-    st.caption("Need help integrating DocuSign/HelloSign? Export PDF and use the provider's developer dashboard. If you want, I can prepare the exact API call for your account.")
 
-st.markdown("")
-
-# -------- HERO / SUMMARY --------
+# -------- HERO ----------
 hero_col, _ = st.columns([3, 1])
 with hero_col:
     st.markdown('<div class="hero-title">Stop chasing payments. Protect your work.</div>', unsafe_allow_html=True)
-    st.markdown('<div class="hero-sub">Generate enforceable, MSME-aware freelance contracts in minutes — live preview & single-file app.</div>', unsafe_allow_html=True)
-    st.markdown('<div style="display:flex; gap:8px; margin-top:10px;">'
-                '<div class="trust-badge">🏛️ MSME Protected</div>'
-                '<div class="trust-badge">👻 Anti-Ghosting</div>'
-                '<div class="trust-badge">🔒 IP Lock</div></div>', unsafe_allow_html=True)
+    st.markdown('<div class="hero-sub">Generate enforceable freelance contracts in minutes — live preview & single-file app.</div>', unsafe_allow_html=True)
 st.markdown("---")
 
-# -------- MAIN: Multi-step form on left, preview on right --------
+# -------- MAIN: Left form | Right preview ----------
 left, right = st.columns([2, 3], gap="large")
 
 with left:
@@ -320,7 +194,8 @@ with left:
                 "gst_registered": gst_registered,
                 "step": 2
             })
-            st.experimental_rerun()
+            # stop execution so Streamlit re-runs cleanly with updated state
+            st.stop()
 
     elif st.session_state.step == 2:
         st.markdown("#### 🎯 Scope of Work")
@@ -331,11 +206,11 @@ with left:
         back, nxt = st.columns([1,1])
         if back.button("Back"):
             st.session_state.step = 1
-            st.experimental_rerun()
+            st.stop()
         if nxt.button("Next: Financials"):
             st.session_state.scope = scope_text
             st.session_state.step = 3
-            st.experimental_rerun()
+            st.stop()
 
     elif st.session_state.step == 3:
         st.markdown("#### 💰 Financials")
@@ -351,21 +226,20 @@ with left:
         back, nxt = st.columns([1,1])
         if back.button("Back"):
             st.session_state.step = 2
-            st.experimental_rerun()
+            st.stop()
         if nxt.button("Next: Generate"):
             st.session_state.update({"project_fee": project_fee, "hourly_rate": hourly_rate, "advance_percent": advance_percent})
             st.session_state.step = 4
-            st.experimental_rerun()
+            st.stop()
 
     elif st.session_state.step == 4:
         st.markdown("#### ✅ Ready to generate")
-        st.write("Review the preview on the right. Generate PDF, email it, or prepare the e-sign payload below.")
+        st.write("Review the preview on the right. Generate PDF, email it, or prepare e-sign payload below.")
         back, gen = st.columns([1,1])
         if back.button("Back"):
             st.session_state.step = 3
-            st.experimental_rerun()
+            st.stop()
         if gen.button("🚀 Generate PDF (creates file in memory)"):
-            # prepare contract and generate PDF bytes
             values = {
                 "freelancer_name": st.session_state.get("freelancer_name", ""),
                 "client_name": st.session_state.get("client_name", ""),
@@ -389,7 +263,6 @@ with left:
             else:
                 st.error("No PDF produced.")
 
-# RIGHT: Live preview + actions
 with right:
     st.markdown("### Live preview & actions")
     preview_values = {
@@ -403,22 +276,9 @@ with right:
         "gst_registered": st.session_state.get("gst_registered", False)
     }
     preview_text = build_contract(preview_values)
-
-    # Nicely render the preview inside an HTML component (simple lightweight renderer)
-    preview_html = f"""
-    <div style="background:#051027; padding:18px; border-radius:8px; color:#dbeafe; font-family: Inter, sans-serif;">
-      <h3 style="margin-top:0;color:#fff">Contract preview</h3>
-      <div style="font-family: 'Courier New', monospace; white-space:pre-wrap; background:rgba(255,255,255,0.02); padding:12px; border-radius:6px; max-height:540px; overflow:auto;">
-        {st.markdown(preview_text.replace('\n', '<br>'), unsafe_allow_html=True)}
-      </div>
-    </div>
-    """
-
-    # fallback — we already rendered above; keep a direct textarea as well
-    st.text_area("Plain preview (read-only)", value=preview_text, height=430, key="plain_preview")
+    st.text_area("Preview (read-only)", value=preview_text, height=430, key="plain_preview")
     st.markdown("---")
 
-    # If a PDF exists in session, show actions
     if st.session_state.get("last_pdf"):
         st.success("✅ PDF in memory")
         col1, col2 = st.columns([1,1])
@@ -426,12 +286,12 @@ with right:
             st.download_button("📥 Download PDF", st.session_state["last_pdf"], file_name="Freelance_Agreement.pdf", mime="application/pdf", use_container_width=True)
         with col2:
             with st.expander("✉️ Email this PDF to client"):
-                st.markdown("Enter SMTP credentials to send this file. Credentials are used for this call only; nothing is stored.")
+                st.markdown("Enter SMTP credentials (used only for this send).")
                 smtp_host = st.text_input("SMTP Host", value="smtp.gmail.com")
                 smtp_port = st.number_input("SMTP Port", value=587)
                 smtp_user = st.text_input("SMTP Username (email)", value="")
                 smtp_pass = st.text_input("SMTP Password / App Password", type="password")
-                to_email = st.text_input("Recipient email", value=st.session_state.get("client_email", "client@example.com"))
+                to_email = st.text_input("Recipient email", value="client@example.com")
                 subj = st.text_input("Email subject", value="Freelance Agreement")
                 body = st.text_area("Email body", value="Please find attached the agreement. Sign and return.", height=120)
                 if st.button("Send email now"):
@@ -442,17 +302,5 @@ with right:
                         st.success("Email sent successfully.")
                     except Exception as e:
                         st.error("Email send failed: " + str(e))
-
-        # E-sign helper
-        with st.expander("🖋️ Prepare e-sign payloads (example)"):
-            st.markdown("Below are example payloads you can use with providers like DocuSign or HelloSign. They require API keys and endpoints from your account.")
-            b64 = base64.b64encode(st.session_state["last_pdf"]).decode("utf-8")
-            st.code(json.dumps(example_esign_payload_docu_sign(b64, preview_values["client_name"], "client@example.com"), indent=2))
-            st.markdown("**Notes:**")
-            st.markdown("- Replace `recipient` details and add authentication header (Bearer token).")
-            st.markdown("- Provider-specific fields (tabs, signHere locations) must be configured per provider docs.")
-            st.markdown("- I can generate a provider-specific API call if you give me the provider and API credentials (or demo keys).")
     else:
         st.info("Generate a PDF first to enable download, email, and e-sign helpers.")
-
-# -------- END --------
