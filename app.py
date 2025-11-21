@@ -15,28 +15,44 @@ st.set_page_config(
 st.markdown(
     """
     <style>
-        /* Main background color */
+        /* Main background with Image and Dimmer */
         .stApp {
-            background-color: #f4f6f9;
+            background-image: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), 
+            url("https://raw.githubusercontent.com/mamamooze/freelance-shield/main/background.png");
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
         }
         
-        /* Sidebar background color */
+        /* Sidebar transparency */
         [data-testid="stSidebar"] {
-            background-color: #ffffff;
+            background-color: rgba(255, 255, 255, 0.95);
             border-right: 1px solid #e0e0e0;
         }
 
-        /* Title font */
+        /* Title text color (White to stand out on dark background) */
         h1 {
             font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-            color: #2c3e50;
+            color: #ffffff;
             font-weight: 700;
+            text-shadow: 0px 2px 4px rgba(0,0,0,0.5);
         }
 
-        /* Subheader */
+        /* Subheader text color */
         .stSubheader {
-            color: #5c6b7a;
+            color: #dcdcdc;
             font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        }
+
+        /* Labels for inputs (Make them white) */
+        .stTextInput label, .stNumberInput label, .stSlider label {
+            color: #ffffff !important;
+        }
+        
+        /* Input field styling */
+        .stTextInput>div>div>input {
+            background-color: rgba(255, 255, 255, 0.9);
+            color: #000;
         }
 
         /* Button styling */
@@ -48,17 +64,11 @@ st.markdown(
             padding: 10px 24px;
             font-weight: 600;
             transition: all 0.3s ease;
+            width: 100%;
         }
         .stButton>button:hover {
             background-color: #2980b9;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        }
-
-        /* Input field styling */
-        .stTextInput>div>div>input, .stNumberInput>div>div>input {
-            border-radius: 8px;
-            border: 1px solid #dce4ec;
-            padding: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
         }
     </style>
     """,
