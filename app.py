@@ -80,18 +80,20 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# --- SESSION STATE (FORCE SYNC FIX) ---
-if 'advance_rate' not in st.session_state:
-    st.session_state.advance_rate = 50
+# --- SESSION STATE INITIALIZATION ---
+# We ensure the keys exist before the widgets load to avoid the yellow warning
+if 'slider_key' not in st.session_state:
+    st.session_state.slider_key = 50
+if 'num_key' not in st.session_state:
+    st.session_state.num_key = 50
 
-# When Slider Moves: Update global rate AND the text box key
+# --- SYNC FUNCTIONS ---
+# When Slider moves, update the Num box
 def update_from_slider():
-    st.session_state.advance_rate = st.session_state.slider_key
     st.session_state.num_key = st.session_state.slider_key
 
-# When Box Changes: Update global rate AND the slider key
+# When Num box changes, update the Slider
 def update_from_num():
-    st.session_state.advance_rate = st.session_state.num_key
     st.session_state.slider_key = st.session_state.num_key
 
 # --- LEGAL DATABASE ---
@@ -180,14 +182,14 @@ with st.sidebar:
     st.write("Advance Required (%)")
     c1, c2 = st.columns([3, 1])
     
-    # --- FORCE SYNC WIDGETS ---
-    # Note: We manually set the keys to match the session state logic above
+    # --- WIDGETS (Fixed: Removed 'value=' arg to fix yellow warning) ---
     with c1:
-        st.slider("Slider", 0, 100, key="slider_key", value=st.session_state.advance_rate, on_change=update_from_slider, label_visibility="collapsed")
+        st.slider("Slider", 0, 100, key="slider_key", on_change=update_from_slider, label_visibility="collapsed")
     with c2:
-        st.number_input("Num", 0, 100, key="num_key", value=st.session_state.advance_rate, on_change=update_from_num, label_visibility="collapsed")
+        st.number_input("Num", 0, 100, key="num_key", on_change=update_from_num, label_visibility="collapsed")
     
-    advance_percent = st.session_state.advance_rate
+    # We read the value from the slider key (which is synced to num_key)
+    advance_percent = st.session_state.slider_key
     
     st.markdown("---")
     generate_btn = st.button("🚀 Generate Contract", type="primary")
