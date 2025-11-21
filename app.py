@@ -53,6 +53,14 @@ st.markdown(
             border-radius: 8px;
         }
         
+        /* PREVIEW BOX STYLING */
+        .stTextArea textarea {
+            font-family: 'Courier New', monospace !important;
+            background-color: #0f172a !important;
+            color: #e2e8f0 !important;
+            border: 1px solid #3b82f6 !important;
+        }
+        
         /* TABS STYLING */
         .stTabs [data-baseweb="tab-list"] {
             gap: 10px;
@@ -67,15 +75,6 @@ st.markdown(
         .stTabs [aria-selected="true"] {
             background-color: #3b82f6;
             color: white !important;
-        }
-
-        /* CARDS (Trust Signals) */
-        .feature-card {
-            background-color: rgba(30, 41, 59, 0.7);
-            padding: 20px;
-            border-radius: 10px;
-            border: 1px solid #334155;
-            margin-bottom: 10px;
         }
 
         /* BUTTONS */
@@ -164,7 +163,6 @@ with col_hero:
     """, unsafe_allow_html=True)
 
 with col_img:
-    # Placeholder for a "Product Shot" or abstract legal art
     pass 
 
 st.markdown("---")
@@ -268,15 +266,23 @@ if generate_btn:
     
     pdf_output = pdf.output(dest='S').encode('latin-1')
     
-    # SUCCESS MODAL
-    st.balloons()
-    st.success("✅ Contract Ready! Scroll down to download.")
+    # --- UPDATED SUCCESS UI (NO BALLOONS, JUST PREVIEW) ---
     
-    # DOWNLOAD BUTTON (Huge and Obvious)
-    st.download_button(
-        label="📥 DOWNLOAD YOUR CONTRACT (PDF)",
-        data=pdf_output,
-        file_name="Freelance_Agreement.pdf",
-        mime="application/pdf",
-        use_container_width=True
-    )
+    st.success("✅ Contract Generated Successfully! Review below.")
+    
+    # Preview Box
+    st.markdown("### 📄 Contract Preview")
+    st.text_area("Read before downloading:", value=full_contract_text, height=400)
+    
+    st.write("") # Vertical Spacer
+    
+    # Download Button Centered
+    col_dl_1, col_dl_2, col_dl_3 = st.columns([1, 2, 1])
+    with col_dl_2:
+        st.download_button(
+            label="📥 DOWNLOAD FINAL PDF CONTRACT",
+            data=pdf_output,
+            file_name="Freelance_Agreement.pdf",
+            mime="application/pdf",
+            use_container_width=True
+        )
