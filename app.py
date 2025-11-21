@@ -18,7 +18,7 @@ st.set_page_config(
 st.markdown(
     """
     <style>
-        /* Main background with Image and Dimmer */
+        /* Main background */
         .stApp {
             background-image: linear-gradient(rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)), 
             url("https://raw.githubusercontent.com/mamamooze/freelance-shield/main/background.png");
@@ -27,13 +27,11 @@ st.markdown(
             background-attachment: fixed;
         }
         
-        /* Sidebar transparency */
         [data-testid="stSidebar"] {
             background-color: rgba(255, 255, 255, 0.95);
             border-right: 1px solid #e0e0e0;
         }
 
-        /* Typography */
         h1, h2, h3 {
             font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
             color: #ffffff;
@@ -47,7 +45,7 @@ st.markdown(
         }
 
         /* Input field styling */
-        .stTextInput>div>div>input, .stTextArea>div>div>textarea {
+        .stTextInput>div>div>input, .stTextArea>div>div>textarea, .stNumberInput>div>div>input {
             background-color: rgba(255, 255, 255, 0.9);
             color: #000;
             border-radius: 8px;
@@ -75,7 +73,17 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# --- LEGAL DATABASE (ANNEXURE EDITION) ---
+# --- SESSION STATE FOR SLIDER SYNC ---
+if 'advance_rate' not in st.session_state:
+    st.session_state.advance_rate = 50
+
+def update_slider():
+    st.session_state.advance_rate = st.session_state.slider_key
+
+def update_num():
+    st.session_state.advance_rate = st.session_state.num_key
+
+# --- LEGAL DATABASE ---
 contract_clauses = {
     "scope_of_work": (
         "1. SCOPE OF WORK & DELIVERABLES\n"
@@ -143,7 +151,6 @@ with st.sidebar:
     
     st.markdown("---")
     st.caption("👇 Define Scope & Acceptance Criteria:")
-    # Updated placeholder to guide user to adding "Criteria"
     scope_work = st.text_area(
         "Scope of Work (Annexure A)", 
         "1. DELIVERABLE: 5 Social Media Posts\n   - CRITERIA: High-res PNG format, approved by marketing lead.\n\n2. DELIVERABLE: 1 Promotional Video (60s)\n   - CRITERIA: 1080p, includes subtitles, background music cleared.",
@@ -151,9 +158,22 @@ with st.sidebar:
     )
     
     st.markdown("---")
-    project_cost = st.text_input("Total Project Fee", "Rs. 50,000")
-    advance_percent = st.slider("Advance Required (%)", 0, 100, 50)
-    hourly_rate = st.text_input("Overtime/Hourly Rate", "Rs. 2,000")
+    
+    # NUMBER INPUTS FOR MONEY (The "Rs" Fix)
+    # We use st.number_input so the user types INTEGERS only. No chance to delete "Rs".
+    project_fee_num = st.number_input("Total Project Fee (INR)", value=50000, step=1000)
+    hourly_rate_num = st.number_input("Overtime/Hourly Rate (INR)", value=2000, step=500)
+    
+    # SYNCED SLIDER + TEXT BOX
+    st.write("Advance Required (%)")
+    col1, col2 = st.columns([3, 1])
+    with col1:
+        st.slider("Slider", 0, 100, key="slider_key", on_change=update_slider, label_visibility="collapsed")
+    with col2:
+        st.number_input("Num", 0, 100, key="num_key", on_change=update_num, label_visibility="collapsed")
+    
+    # Use the session state value for the logic
+    advance_percent = st.session_state.advance_rate
     
     st.markdown("---")
     st.caption("🔒 Privacy First: No data is saved.")
@@ -161,9 +181,10 @@ with st.sidebar:
 # Generate Button
 if st.button("Generate Professional Contract", type="primary"):
     
-    # 1. SANITIZE INPUTS
-    safe_cost = project_cost.replace("₹", "Rs. ").strip()
-    safe_rate = hourly_rate.replace("₹", "Rs. ").strip()
+    # 1. FORMAT INPUTS (We add the Rs. programmatically)
+    # The user only typed "50000", so we add "Rs." and format with commas (e.g., 50,000)
+    safe_cost = f"Rs. {project_fee_num:,}"
+    safe_rate = f"Rs. {hourly_rate_num:,}"
     safe_scope = scope_work.replace("₹", "Rs. ")
     gst_text = "(Exclusive of GST)" if gst_registered else ""
     
@@ -197,7 +218,7 @@ if st.button("Generate Professional Contract", type="primary"):
     full_contract_text += "_________________________\n"
     full_contract_text += f"(Signature)\n{client_name}\n"
 
-    # Show Preview (Main Text Only)
+    # Show Preview
     with st.container():
         st.markdown("### 📄 Contract Preview (Annexure attached in PDF)")
         st.text_area("Main Terms:", full_contract_text, height=300)
