@@ -15,7 +15,7 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# --- 2. CUSTOM CSS (FIXED TABS) ---
+# --- 2. CUSTOM CSS ---
 st.markdown(
     """
     <style>
@@ -70,24 +70,21 @@ st.markdown(
             background-color: #0f172a;
             border-right: 1px solid #1e293b;
         }
-        [data-testid="stSidebar"] h1, [data-testid="stSidebar"] h2, [data-testid="stSidebar"] h3, [data-testid="stSidebar"] p {
+        [data-testid="stSidebar"] h1, [data-testid="stSidebar"] h2, [data-testid="stSidebar"] h3, [data-testid="stSidebar"] p, [data-testid="stSidebar"] li {
             color: #cbd5e1 !important;
         }
         
-        /* --- FIXED TAB STYLING (THE PILL LOOK) --- */
+        /* PILL TABS */
         .stTabs [data-baseweb="tab-list"] {
             gap: 10px;
             background-color: rgba(30, 41, 59, 0.5);
             padding: 10px;
-            border-radius: 30px; /* Makes the container round */
+            border-radius: 30px;
             border: 1px solid #334155;
         }
         .stTabs [data-baseweb="tab"] {
-            height: auto !important; /* Removes fixed height issue */
-            padding-top: 8px;
-            padding-bottom: 8px;
-            padding-left: 20px;
-            padding-right: 20px;
+            height: auto !important;
+            padding: 8px 20px;
             background-color: transparent;
             border-radius: 20px;
             color: #cbd5e1;
@@ -95,12 +92,12 @@ st.markdown(
             font-weight: 600;
         }
         .stTabs [aria-selected="true"] {
-            background-color: #3b82f6; /* The Blue Box */
+            background-color: #3b82f6;
             color: white !important;
             box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3);
         }
         
-        /* Preview Box Styling */
+        /* PREVIEW BOX */
         .stTextArea textarea {
             font-family: 'Courier New', monospace !important;
             background-color: #0f172a !important;
@@ -108,7 +105,7 @@ st.markdown(
             border: 1px solid #3b82f6 !important;
         }
         
-        /* Warning Box */
+        /* WARNING BOX */
         .warning-box {
             background-color: rgba(255, 193, 7, 0.15); border-left: 4px solid #ffc107; padding: 10px; margin-bottom: 10px; border-radius: 4px; color: #ffecb3; font-size: 0.9rem;
         }
@@ -206,9 +203,8 @@ def update_scope():
 def update_from_slider(): st.session_state.num_key = st.session_state.slider_key
 def update_from_num(): st.session_state.slider_key = st.session_state.num_key
 
-# --- 4. DYNAMIC LEGAL LOGIC (SMART CLAUSES) ---
+# --- 4. DYNAMIC LEGAL LOGIC ---
 def get_smart_clauses(category, rate):
-    # Base Clauses
     clauses = {
         "acceptance": f"Client review within 5 days. Silence = Acceptance. 2 revisions included. Extra changes billed at {rate}/hr.",
         "warranty": "Provided 'as-is'. No post-delivery support unless specified in Annexure A.",
@@ -216,7 +212,6 @@ def get_smart_clauses(category, rate):
         "cancellation": "Cancellation after work starts incurs a forfeiture of the Advance Payment."
     }
 
-    # CATEGORY LOGIC
     if category in ["Web Development", "App Development"]:
         clauses["warranty"] = f"BUG FIX WARRANTY: Provider agrees to fix critical bugs reported within 30 days. Feature changes billed at {rate}/hr."
         clauses["ip_rights"] = "CODE OWNERSHIP: Client receives full source code rights upon payment. Provider retains rights to generic libraries."
@@ -235,20 +230,25 @@ def get_smart_clauses(category, rate):
 
     elif category == "Voice-Over":
         clauses["acceptance"] = "CORRECTION POLICY: Includes 1 round for pronunciation/pacing errors. Script changes require a new fee."
+        clauses["cancellation"] = "KILL FEE: 50% fee if cancelled after start. 100% fee if cancelled after recording session."
 
     return clauses
 
 # --- 5. SIDEBAR ---
 with st.sidebar:
     if os.path.exists("logo.png"): st.image("logo.png", width=120)
-    st.markdown("### 🏆 Why Trust Shield?")
-    st.info("✅ **Legal Logic:** Based on Indian Contract Act, 1872.")
-    st.info("✅ **MSME 3x Interest:** Section 16 Enforceable Clause.")
     
-    st.markdown("---")
-    st.markdown("### 👨‍⚖️ Founder's Mission")
-    st.write("**Hi, I'm a Law Student.**")
-    st.caption("I built this tool to help Indian freelancers get paid on time, every time.")
+    # UPDATED FOUNDER'S MISSION (Perplexity Copy)
+    st.markdown("### 🎯 Founder’s Mission")
+    st.write("**Hi, I'm a Law Student working to empower Indian freelancers.**")
+    st.write("Every year, thousands of independent professionals lose income to late payments, scope creep, and unfair contracts.")
+    st.write("**I built this platform so every freelancer—designer, developer, writer—can generate a legally binding, MSME-protected contract in seconds.**")
+    
+    st.markdown("- 🚀 No more chasing payments")
+    st.markdown("- 🛡️ No more ignored clauses")
+    st.markdown("- 🏛️ Legal terms trusted by MSMEs")
+    
+    st.caption("**You deserve to get paid on time, every time.**")
     
     st.markdown("---")
     st.markdown("### 🆘 Need Custom Help?")
@@ -261,7 +261,6 @@ with c1:
     st.markdown("# Stop Chasing Payments.")
     st.markdown('<p class="sub-hero">Generate watertight, MSME-protected contracts for Indian Freelancers in 30 seconds.</p>', unsafe_allow_html=True)
     
-    # Dynamic Greeting
     hour = datetime.datetime.now().hour
     greeting = "Good Morning" if 5 <= hour < 12 else "Good Afternoon" if 12 <= hour < 18 else "Good Evening"
     st.toast(f"👋 {greeting}, Freelancer! Let's get you protected.")
@@ -276,7 +275,6 @@ with c1:
 
 st.markdown("---")
 
-# TABS
 tab1, tab2, tab3 = st.tabs(["👤 The Parties", "🎯 The Work (Scope)", "💰 The Money"])
 
 with tab1:
@@ -325,7 +323,6 @@ if generate_btn:
     gst_clause = "(Exclusive of GST)" if gst_registered else ""
 
     smart = get_smart_clauses(template_choice, safe_rate)
-    
     cancel_clause = smart.get("cancellation", "Cancellation after work starts incurs a forfeiture of the Advance Payment.")
 
     # CONTRACT TEXT
