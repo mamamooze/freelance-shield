@@ -1,8 +1,10 @@
 import streamlit as st
 from fpdf import FPDF
+from docx import Document
 import datetime
 import os
 import time
+import io
 
 # --- 1. SETUP & CONFIG ---
 icon_path = "logo.png"
@@ -15,7 +17,7 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# --- 2. CUSTOM CSS ---
+# --- 2. CUSTOM CSS (HIGH CONTRAST & VISUAL POP) ---
 st.markdown(
     """
     <style>
@@ -27,29 +29,57 @@ st.markdown(
             background-attachment: fixed;
         }
 
-        /* TYPOGRAPHY */
+        /* HERO TITLE GRADIENT */
         h1 {
-            background: -webkit-linear-gradient(45deg, #ffffff, #3b82f6);
+            background: -webkit-linear-gradient(45deg, #ffffff, #00d2ff);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             font-family: 'Inter', sans-serif;
             font-weight: 900;
-            font-size: 3.8rem;
-            letter-spacing: -2px;
-            text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            font-size: 3.5rem;
+            letter-spacing: -1px;
+            text-shadow: 0 2px 10px rgba(0,210,255,0.3);
         }
+        h2, h3 { color: #f8f9fa !important; font-family: 'Inter', sans-serif; }
         
+        /* TEXT VISIBILITY FIX */
+        .stMarkdown p, .stMarkdown li, label {
+            color: #e0e0e0 !important;
+            font-size: 1.05rem;
+            line-height: 1.6;
+        }
+
+        /* CARDS (Hover Effect) */
+        .stInfo {
+            background-color: rgba(30, 41, 59, 0.6);
+            border: 1px solid #334155;
+            transition: transform 0.2s ease, border-color 0.2s;
+        }
+        .stInfo:hover {
+            transform: translateY(-3px);
+            border-color: #00d2ff;
+            box-shadow: 0 4px 15px rgba(0, 210, 255, 0.1);
+        }
+
         /* INPUT FIELDS */
         .stTextInput input, .stNumberInput input, .stTextArea textarea, .stSelectbox div[data-baseweb="select"] {
             background-color: #1e293b !important;
             color: #ffffff !important;
-            border: 1px solid #334155 !important;
+            border: 1px solid #475569 !important;
             border-radius: 8px;
         }
+        
+        /* PREVIEW BOX */
+        .stTextArea textarea {
+            font-family: 'Courier New', monospace !important;
+            background-color: #0f172a !important;
+            color: #93c5fd !important; /* Light Blue Text */
+            border: 1px solid #3b82f6 !important;
+        }
 
-        /* BUTTONS */
+        /* BUTTONS (Neon Glow) */
         .stButton>button {
-            background: linear-gradient(90deg, #3b82f6, #2563eb);
+            background: linear-gradient(90deg, #2563eb, #00d2ff);
             color: white;
             font-weight: bold;
             border: none;
@@ -58,21 +88,17 @@ st.markdown(
             width: 100%;
             text-transform: uppercase;
             letter-spacing: 1px;
+            box-shadow: 0 4px 15px rgba(0, 210, 255, 0.3);
             transition: all 0.3s;
         }
         .stButton>button:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(37, 99, 235, 0.4);
+            box-shadow: 0 6px 20px rgba(0, 210, 255, 0.5);
         }
 
         /* SIDEBAR */
-        [data-testid="stSidebar"] {
-            background-color: #0f172a;
-            border-right: 1px solid #1e293b;
-        }
-        [data-testid="stSidebar"] h1, [data-testid="stSidebar"] h2, [data-testid="stSidebar"] h3, [data-testid="stSidebar"] p, [data-testid="stSidebar"] li {
-            color: #cbd5e1 !important;
-        }
+        [data-testid="stSidebar"] { background-color: #0f172a; border-right: 1px solid #1e293b; }
+        [data-testid="stSidebar"] h1, [data-testid="stSidebar"] h2, [data-testid="stSidebar"] p { color: #cbd5e1 !important; }
         
         /* PILL TABS */
         .stTabs [data-baseweb="tab-list"] {
@@ -97,14 +123,6 @@ st.markdown(
             box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3);
         }
         
-        /* PREVIEW BOX */
-        .stTextArea textarea {
-            font-family: 'Courier New', monospace !important;
-            background-color: #0f172a !important;
-            color: #e2e8f0 !important;
-            border: 1px solid #3b82f6 !important;
-        }
-        
         /* WARNING BOX */
         .warning-box {
             background-color: rgba(255, 193, 7, 0.15); border-left: 4px solid #ffc107; padding: 10px; margin-bottom: 10px; border-radius: 4px; color: #ffecb3; font-size: 0.9rem;
@@ -114,13 +132,26 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# --- 3. STATE & TEMPLATES ---
+# --- 3. STATE & LOGIC ---
 if 'advance_rate' not in st.session_state: st.session_state.advance_rate = 50
 if 'slider_key' not in st.session_state: st.session_state.slider_key = 50
 if 'num_key' not in st.session_state: st.session_state.num_key = 50
 if 'scope_text' not in st.session_state: st.session_state.scope_text = ""
 
-# FULL 12 TEMPLATE LIBRARY
+# --- DOCX GENERATOR FUNCTION ---
+def create_docx(full_text, annexure_text):
+    doc = Document()
+    doc.add_heading('PROFESSIONAL SERVICE AGREEMENT', 0)
+    doc.add_paragraph(full_text)
+    doc.add_page_break()
+    doc.add_heading('ANNEXURE A: SCOPE OF WORK', 1)
+    doc.add_paragraph(annexure_text)
+    buffer = io.BytesIO()
+    doc.save(buffer)
+    buffer.seek(0)
+    return buffer
+
+# --- FULL TEMPLATE LIBRARY (12 CATEGORIES) ---
 scope_templates = {
     "Select a template...": "",
     
@@ -203,8 +234,9 @@ def update_scope():
 def update_from_slider(): st.session_state.num_key = st.session_state.slider_key
 def update_from_num(): st.session_state.slider_key = st.session_state.num_key
 
-# --- 4. DYNAMIC LEGAL LOGIC ---
+# --- SMART LEGAL LOGIC ---
 def get_smart_clauses(category, rate):
+    # Base Clauses
     clauses = {
         "acceptance": f"Client review within 5 days. Silence = Acceptance. 2 revisions included. Extra changes billed at {rate}/hr.",
         "warranty": "Provided 'as-is'. No post-delivery support unless specified in Annexure A.",
@@ -212,6 +244,7 @@ def get_smart_clauses(category, rate):
         "cancellation": "Cancellation after work starts incurs a forfeiture of the Advance Payment."
     }
 
+    # Category Overrides
     if category in ["Web Development", "App Development"]:
         clauses["warranty"] = f"BUG FIX WARRANTY: Provider agrees to fix critical bugs reported within 30 days. Feature changes billed at {rate}/hr."
         clauses["ip_rights"] = "CODE OWNERSHIP: Client receives full source code rights upon payment. Provider retains rights to generic libraries."
@@ -231,14 +264,17 @@ def get_smart_clauses(category, rate):
     elif category == "Voice-Over":
         clauses["acceptance"] = "CORRECTION POLICY: Includes 1 round for pronunciation/pacing errors. Script changes require a new fee."
         clauses["cancellation"] = "KILL FEE: 50% fee if cancelled after start. 100% fee if cancelled after recording session."
+        
+    elif category == "Translation":
+        clauses["warranty"] = "ACCURACY WARRANTY: Provider guarantees >98% accuracy. Errors discovered within 7 days will be fixed free."
+        clauses["cancellation"] = "KILL FEE: Cancellation after start incurs 50% fee. Cancellation after draft delivery incurs 100% fee."
 
     return clauses
 
-# --- 5. SIDEBAR ---
+# --- 4. SIDEBAR ---
 with st.sidebar:
     if os.path.exists("logo.png"): st.image("logo.png", width=120)
     
-    # UPDATED FOUNDER'S MISSION (Perplexity Copy)
     st.markdown("### 🎯 Founder’s Mission")
     st.write("**Hi, I'm a Law Student working to empower Indian freelancers.**")
     st.write("Every year, thousands of independent professionals lose income to late payments, scope creep, and unfair contracts.")
@@ -255,7 +291,7 @@ with st.sidebar:
     st.write("Complex project? Don't risk it.")
     st.link_button("Hire Me for Review (₹499)", "https://wa.me/YOUR_NUMBER_HERE")
 
-# --- 6. MAIN UI ---
+# --- 5. MAIN UI ---
 c1, c2 = st.columns([2, 1])
 with c1:
     st.markdown("# Stop Chasing Payments.")
@@ -278,7 +314,6 @@ st.markdown("---")
 tab1, tab2, tab3 = st.tabs(["👤 The Parties", "🎯 The Work (Scope)", "💰 The Money"])
 
 with tab1:
-    st.markdown("### 👤 Who is this contract for?")
     c1, c2 = st.columns(2)
     with c1:
         freelancer_name = st.text_input("Provider Name (You)", "Amit Kumar")
@@ -290,13 +325,11 @@ with tab1:
         gst_registered = st.checkbox("I am GST Registered")
 
 with tab2:
-    st.markdown("### 🎯 What are you delivering?")
     st.markdown('<div class="warning-box">⚠️ <b>NOTE:</b> Selecting a category adjusts the <b>Legal Clauses</b> (IP Rights, Warranty) to match your industry risks.</div>', unsafe_allow_html=True)
     template_choice = st.selectbox("✨ Select Industry (Smart Clauses):", list(scope_templates.keys()), key="template_selector", on_change=update_scope)
-    scope_work = st.text_area("Scope of Work (Annexure A)", key="scope_text", height=200)
+    scope_work = st.text_area("Scope of Work (Annexure A)", key="scope_text", height=200, help="Be specific!")
 
 with tab3:
-    st.markdown("### 💰 Financial Terms")
     c1, c2, c3 = st.columns(3)
     with c1: project_fee_num = st.number_input("Total Project Fee (INR)", value=50000, step=1000)
     with c2: hourly_rate_num = st.number_input("Overtime Rate (INR/hr)", value=2000, step=500)
@@ -312,43 +345,70 @@ st.markdown("---")
 c_main = st.columns([1, 2, 1])
 with c_main[1]: generate_btn = st.button("🚀 Generate Legal Contract Now", type="primary")
 
-# --- 7. GENERATION LOGIC ---
+# --- 6. GENERATION & EXPORT ---
 if generate_btn:
-    with st.spinner("Drafting your watertight contract..."):
-        time.sleep(1.5)
-    
+    # UX: Progress Bar
+    progress_text = "Drafting legal clauses..."
+    my_bar = st.progress(0, text=progress_text)
+    for percent_complete in range(100):
+        time.sleep(0.01)
+        my_bar.progress(percent_complete + 1, text=progress_text)
+    time.sleep(0.5)
+    my_bar.empty()
+
+    # LOGIC
     safe_cost = f"Rs. {project_fee_num:,}"
     safe_rate = f"Rs. {hourly_rate_num:,}"
     safe_scope = st.session_state.scope_text.replace("₹", "Rs. ")
     gst_clause = "(Exclusive of GST)" if gst_registered else ""
-
     smart = get_smart_clauses(template_choice, safe_rate)
     cancel_clause = smart.get("cancellation", "Cancellation after work starts incurs a forfeiture of the Advance Payment.")
 
-    # CONTRACT TEXT
-    full_contract_text = "PROFESSIONAL SERVICE AGREEMENT\n"
-    full_contract_text += f"Date: {datetime.date.today().strftime('%B %d, %Y')}\n\n"
-    full_contract_text += f"BETWEEN: {freelancer_name} (Provider) AND {client_name} (Client)\n"
-    full_contract_text += "-"*60 + "\n\n"
+    # TEXT CONSTRUCTION
+    full_text = f"""
+    PROFESSIONAL SERVICE AGREEMENT
+    Date: {datetime.date.today().strftime('%B %d, %Y')}
     
-    full_contract_text += f"1. PAYMENT & INTEREST (MSME ACT)\n"
-    full_contract_text += f"Total Fee: {safe_cost} {gst_clause}. Advance: {advance_percent}%. Late payments attract compound interest at 3x the Bank Rate notified by RBI (Section 16, MSMED Act, 2006).\n\n"
+    BETWEEN: {freelancer_name} (Provider) AND {client_name} (Client)
     
-    full_contract_text += "2. ACCEPTANCE & REVISIONS\n" + f"{smart['acceptance']}\n\n"
-    full_contract_text += "3. CONFIDENTIALITY (NDA)\nBoth parties agree to keep proprietary information confidential during and for two (2) years after termination.\n\n"
-    full_contract_text += "4. IP RIGHTS (IP LOCK)\n" + f"{smart['ip_rights']}\n\n"
-    full_contract_text += "5. WARRANTY & SUPPORT\n" + f"{smart['warranty']}\n\n"
-    full_contract_text += "6. COMMUNICATION POLICY\nProvider will respond within 1 business day. If Client is unresponsive for >14 days, the contract terminates (Ghosting Clause). Standby fee of Rs. 500/day applies for extended delays.\n\n"
-    full_contract_text += "7. FORCE MAJEURE\nNeither party is liable for delays caused by natural disasters, pandemics, or internet infrastructure failures.\n\n"
-    full_contract_text += "8. LIMITATION OF LIABILITY\nProvider's total liability shall not exceed the Total Project Fee paid. No liability for indirect damages.\n\n"
-    full_contract_text += "9. CANCELLATION / KILL FEE\n" + f"{cancel_clause}\n\n"
-    full_contract_text += "10. JURISDICTION & AMENDMENT\nAmendments must be in writing. Disputes subject to Arbitration in " + jurisdiction_city + ", India.\n\n"
-    full_contract_text += "11. GST COMPLIANCE\nAll fees are exclusive of applicable GST. Client bears GST liability. Provider warrants tax compliance.\n\n"
+    1. PAYMENT & INTEREST (MSME ACT)
+    Total Fee: {safe_cost} {gst_clause}. Advance: {advance_percent}%.
+    Late payments attract compound interest at 3x the Bank Rate (Section 16, MSMED Act, 2006).
     
-    full_contract_text += "-"*60 + "\n"
-    full_contract_text += "IN WITNESS WHEREOF, the parties have executed this Agreement.\n\n"
-    full_contract_text += f"SIGNED BY PROVIDER:\n_________________________\n{freelancer_name}\n\n"
-    full_contract_text += f"SIGNED BY CLIENT:\n_________________________\n{client_name}\n"
+    2. ACCEPTANCE & REVISIONS
+    {smart['acceptance']}
+    
+    3. CONFIDENTIALITY (NDA)
+    Strict confidentiality for 2 years post-termination.
+    
+    4. IP RIGHTS (IP LOCK)
+    {smart['ip_rights']}
+    
+    5. WARRANTY & SUPPORT
+    {smart['warranty']}
+    
+    6. COMMUNICATION POLICY
+    Provider responds within 1 business day. Client silence >14 days = Termination (Ghosting).
+    
+    7. FORCE MAJEURE
+    Not liable for acts of God or internet failure.
+    
+    8. LIMITATION OF LIABILITY
+    Liability limited to Total Fee paid. No indirect damages.
+    
+    9. CANCELLATION / KILL FEE
+    {cancel_clause}
+    
+    10. JURISDICTION
+    Disputes subject to Arbitration in {jurisdiction_city}, India.
+    
+    11. GST COMPLIANCE
+    Client bears GST liability.
+    
+    ---------------------------------------------------
+    SIGNED BY PROVIDER: {freelancer_name}
+    SIGNED BY CLIENT: {client_name}
+    """
 
     # PDF GENERATION
     pdf = FPDF()
@@ -356,31 +416,40 @@ if generate_btn:
     if os.path.exists("logo.png"):
         try: pdf.image("logo.png", 10, 8, 25); pdf.ln(20)
         except: pass
-    
     pdf.set_font("Arial", size=10)
-    clean_text = full_contract_text.encode('latin-1', 'replace').decode('latin-1')
-    pdf.multi_cell(0, 5, clean_text)
-    
-    # Annexure Page
+    pdf.multi_cell(0, 5, full_text.encode('latin-1', 'replace').decode('latin-1'))
     pdf.add_page()
     pdf.set_font("Arial", 'B', size=12)
     pdf.cell(0, 10, "ANNEXURE A: SCOPE OF WORK", ln=True)
     pdf.ln(5)
     pdf.set_font("Arial", size=10)
-    clean_scope = safe_scope.encode('latin-1', 'replace').decode('latin-1')
-    pdf.multi_cell(0, 6, clean_scope)
+    pdf.multi_cell(0, 5, safe_scope.encode('latin-1', 'replace').decode('latin-1'))
+    pdf_data = pdf.output(dest='S').encode('latin-1')
+
+    # WORD GENERATION
+    docx_data = create_docx(full_text, safe_scope)
+
+   # UI OUTPUT (Corrected Ending)
+    st.balloons()
+    st.success("✅ Contract Ready! Choose your format below.")
     
-    pdf_output = pdf.output(dest='S').encode('latin-1')
-    
-    st.success("✅ Contract Generated Successfully! Review below.")
-    st.text_area("Read before downloading:", value=full_contract_text, height=400)
-    
-    col_dl_1, col_dl_2, col_dl_3 = st.columns([1, 2, 1])
-    with col_dl_2:
+    col_d1, col_d2 = st.columns(2)
+    with col_d1:
         st.download_button(
-            label="📥 DOWNLOAD FINAL PDF CONTRACT",
-            data=pdf_output,
-            file_name="Freelance_Agreement.pdf",
+            label="📄 Download as PDF",
+            data=pdf_data,
+            file_name="Contract.pdf",
             mime="application/pdf",
             use_container_width=True
         )
+    with col_d2:
+        st.download_button(
+            label="📝 Download as Word (Editable)",
+            data=docx_data,
+            file_name="Contract.docx",
+            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            use_container_width=True
+        )
+        
+    with st.expander("👀 View Preview"):
+        st.text_area("Contract Text:", value=full_text + "\n\n" + safe_scope, height=300)
