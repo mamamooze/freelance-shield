@@ -20,7 +20,8 @@ st.markdown(
     <style>
         /* BACKGROUND */
         .stApp {
-            background-image: linear-gradient(rgba(10, 10, 20, 0.95), rgba(10, 10, 20, 0.90)), 
+            /* Changed opacity from 0.95 to 0.75 so the image shows through */
+            background-image: linear-gradient(rgba(10, 10, 20, 0.75), rgba(10, 10, 20, 0.75)), 
             url("https://raw.githubusercontent.com/mamamooze/freelance-shield/main/background.png");
             background-size: cover;
             background-attachment: fixed;
