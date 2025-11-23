@@ -17,7 +17,7 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# --- 2. CUSTOM CSS (HIGH CONTRAST & VISUAL POP) ---
+# --- 2. CUSTOM CSS ---
 st.markdown(
     """
     <style>
@@ -297,9 +297,12 @@ with c1:
     st.markdown("# Stop Chasing Payments.")
     st.markdown('<p class="sub-hero">Generate watertight, MSME-protected contracts for Indian Freelancers in 30 seconds.</p>', unsafe_allow_html=True)
     
-    hour = datetime.datetime.now().hour
-    greeting = "Good Morning" if 5 <= hour < 12 else "Good Afternoon" if 12 <= hour < 18 else "Good Evening"
-    st.toast(f"👋 {greeting}, Freelancer! Let's get you protected.")
+    # Dynamic Greeting with Session State Check
+    if 'has_greeted' not in st.session_state:
+        hour = datetime.datetime.now().hour
+        greeting = "Good Morning" if 5 <= hour < 12 else "Good Afternoon" if 12 <= hour < 18 else "Good Evening"
+        st.toast(f"👋 {greeting}, Freelancer! Let's get you protected.")
+        st.session_state.has_greeted = True
 
     st.markdown("""
     <div style="display: flex; gap: 15px; margin-bottom: 20px;">
@@ -429,27 +432,14 @@ if generate_btn:
     # WORD GENERATION
     docx_data = create_docx(full_text, safe_scope)
 
-   # UI OUTPUT (Corrected Ending)
-    st.balloons()
+    # UI OUTPUT (NO BALLOONS)
     st.success("✅ Contract Ready! Choose your format below.")
     
     col_d1, col_d2 = st.columns(2)
     with col_d1:
-        st.download_button(
-            label="📄 Download as PDF",
-            data=pdf_data,
-            file_name="Contract.pdf",
-            mime="application/pdf",
-            use_container_width=True
-        )
+        st.download_button("📄 Download as PDF", data=pdf_data, file_name="Contract.pdf", mime="application/pdf", use_container_width=True)
     with col_d2:
-        st.download_button(
-            label="📝 Download as Word (Editable)",
-            data=docx_data,
-            file_name="Contract.docx",
-            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-            use_container_width=True
-        )
+        st.download_button("📝 Download as Word (Editable)", data=docx_data, file_name="Contract.docx", mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document", use_container_width=True)
         
     with st.expander("👀 View Preview"):
-        st.text_area("Contract Text:", value=full_text + "\n\n" + safe_scope, height=300)
+        st.text_area("", value=full_text + "\n\n" + safe_scope, height=300)
