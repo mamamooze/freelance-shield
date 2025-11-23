@@ -17,7 +17,7 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# --- 2. CUSTOM CSS ---
+# --- 2. CUSTOM CSS (FINAL POLISH) ---
 st.markdown(
     """
     <style>
@@ -151,76 +151,76 @@ def create_docx(full_text, annexure_text):
     buffer.seek(0)
     return buffer
 
-# --- FULL TEMPLATE LIBRARY (12 CATEGORIES) ---
+# --- FULL TEMPLATE LIBRARY (WITH ICONS) ---
 scope_templates = {
     "Select a template...": "",
     
-    "Content Writing": """DELIVERABLE: 4 SEO Blog Articles (1000 words each)
+    "✍️ Content Writing": """DELIVERABLE: 4 SEO Blog Articles (1000 words each)
 - FORMAT: .docx, Grammarly score >90
 - TOPICS: Approved by Client in advance
 - DELIVERY: 2 articles/week via email
 - REVISIONS: 1 round included per article
 - EXCLUSIONS: No image sourcing, keyword research, or posting""",
 
-    "Graphic Design": """DELIVERABLE: Logo (PNG/SVG), Business Card (PDF), Banner
+    "🎨 Graphic Design": """DELIVERABLE: Logo (PNG/SVG), Business Card (PDF), Banner
 - BRIEF: Colors/Fonts provided by Client
 - REVISIONS: 3 feedback rounds included (within 2 days)
 - DELIVERY: Final files via Google Drive in 7 days
 - EXCLUSIONS: No printing costs or stock image purchase""",
 
-    "UI/UX & Web Design": """DELIVERABLE: Wireframe + UI Kit (5 Screens)
+    "🖼️ UI/UX & Web Design": """DELIVERABLE: Wireframe + UI Kit (5 Screens)
 - FORMAT: Figma/Sketch/XD files
 - TIMELINE: Initial draft in 5 days
 - REVISIONS: 2 rounds included
 - EXCLUSIONS: No coding/development included""",
 
-    "Web Development": """DELIVERABLE: 5-Page Responsive Website (WordPress)
+    "💻 Web Development": """DELIVERABLE: 5-Page Responsive Website (WordPress)
 - SPECS: Speed score >80, Contact Form, About Page
 - DELIVERY: Staging link for review, ZIP files after payment
 - REVISIONS: 2 rounds included
 - EXCLUSIONS: Domain/Hosting fees and content writing not included""",
 
-    "App Development": """DELIVERABLE: Android App MVP (5 Core Features)
+    "📱 App Development": """DELIVERABLE: Android App MVP (5 Core Features)
 - SPECS: Compiles on Android 11+, Source Code included
 - TIMELINE: Weekly sprints, 30-day bug fix warranty
 - EXCLUSIONS: Google Play Store upload fees not included""",
 
-    "Video Editing": """DELIVERABLE: Edit 2 YouTube Videos (max 8 mins)
+    "🎥 Video Editing": """DELIVERABLE: Edit 2 YouTube Videos (max 8 mins)
 - FORMAT: MP4, 1080p, Color Graded
 - TIMELINE: Draft within 48 hours of receiving raw files
 - REVISIONS: 2 feedback rounds included
 - EXCLUSIONS: No captions, thumbnails, or stock footage""",
 
-    "Social Media Marketing": """DELIVERABLE: 12 Static Posts + 4 Reels (Monthly)
+    "📱 Social Media Marketing": """DELIVERABLE: 12 Static Posts + 4 Reels (Monthly)
 - FORMAT: PNG (1080px) and MP4 (<60s)
 - SCHEDULE: 3 posts/week, approved by 25th of prev month
 - REVISIONS: 2 rounds per month included
 - EXCLUSIONS: No paid ad management or community replies""",
 
-    "SEO & Digital Marketing": """DELIVERABLE: SEO Audit (20 pages) + Keyword Plan
+    "📈 SEO & Digital Marketing": """DELIVERABLE: SEO Audit (20 pages) + Keyword Plan
 - FORMAT: PDF Report, Excel Sheet
 - SPECS: 30 priority keywords, competitor analysis
 - REVISIONS: 1 round included
 - EXCLUSIONS: On-page implementation and backlinks not included""",
 
-    "Virtual Assistance": """DELIVERABLE: Daily Admin Tasks (Email/Calendar)
+    "📧 Virtual Assistance": """DELIVERABLE: Daily Admin Tasks (Email/Calendar)
 - REPORTING: Daily Excel report, Inbox cleared
 - AVAILABILITY: Mon-Fri, 9am-5pm
 - EXCLUSIONS: No calls, travel booking, or personal errands""",
 
-    "Photography": """DELIVERABLE: 50 Product Shots (Edited)
+    "📸 Photography": """DELIVERABLE: 50 Product Shots (Edited)
 - FORMAT: High-res JPEGs, 3000px, White Background
 - TIMELINE: Edits delivered in 3 days
 - REVISIONS: 1 re-edit round per batch of 10
 - EXCLUSIONS: No props, prints, or location booking fees""",
 
-    "Translation": """DELIVERABLE: Translate 10k words (Eng-Hindi) + 2 Transcripts
+    "🗣️ Translation": """DELIVERABLE: Translate 10k words (Eng-Hindi) + 2 Transcripts
 - FORMAT: Word/TXT files
 - ACCURACY: >98% standard
 - REVISIONS: 1 review round included
 - EXCLUSIONS: No subtitling or legal localization""",
 
-    "Voice-Over": """DELIVERABLE: 3 Commercial Voice-overs (30s) + 1 Podcast Edit
+    "🎙️ Voice-Over": """DELIVERABLE: 3 Commercial Voice-overs (30s) + 1 Podcast Edit
 - FORMAT: WAV/MP3, Commercial rights included
 - SCRIPT: Supplied by Client
 - REVISIONS: 1 correction round included
@@ -234,7 +234,7 @@ def update_scope():
 def update_from_slider(): st.session_state.num_key = st.session_state.slider_key
 def update_from_num(): st.session_state.slider_key = st.session_state.num_key
 
-# --- SMART LEGAL LOGIC ---
+# --- SMART LEGAL LOGIC (UPDATED WITH ICONS) ---
 def get_smart_clauses(category, rate):
     # Base Clauses
     clauses = {
@@ -244,28 +244,33 @@ def get_smart_clauses(category, rate):
         "cancellation": "Cancellation after work starts incurs a forfeiture of the Advance Payment."
     }
 
-    # Category Overrides
-    if category in ["Web Development", "App Development"]:
+    # Tech
+    if category in ["💻 Web Development", "📱 App Development"]:
         clauses["warranty"] = f"BUG FIX WARRANTY: Provider agrees to fix critical bugs reported within 30 days. Feature changes billed at {rate}/hr."
         clauses["ip_rights"] = "CODE OWNERSHIP: Client receives full source code rights upon payment. Provider retains rights to generic libraries."
     
-    elif category in ["Graphic Design", "Video Editing", "UI/UX & Web Design", "Photography"]:
+    # Creative
+    elif category in ["🎨 Graphic Design", "🎥 Video Editing", "🖼️ UI/UX & Web Design", "📸 Photography"]:
         clauses["acceptance"] = "CREATIVE APPROVAL: Rejections based on 'personal taste' after initial style approval will be billed as a new Change Order."
         clauses["ip_rights"] = "SOURCE FILES: Final deliverables transfer upon payment. Raw source files (PSD/PrProj) remain property of Provider unless purchased."
 
-    elif category in ["Social Media Marketing", "SEO & Digital Marketing"]:
+    # Marketing
+    elif category in ["📱 Social Media Marketing", "📈 SEO & Digital Marketing"]:
         clauses["warranty"] = "NO ROI GUARANTEE: Provider does NOT guarantee specific results (Likes, Sales, Rankings) as platform algorithms are external."
         clauses["acceptance"] = "APPROVAL WINDOW: Content must be approved 24 hours prior to publishing deadlines."
 
-    elif category in ["Content Writing", "Translation"]:
+    # Text
+    elif category in ["✍️ Content Writing", "🗣️ Translation"]:
         clauses["warranty"] = "ORIGINALITY WARRANTY: Provider warrants that work is original and passes standard plagiarism checks."
         clauses["acceptance"] = "EDITORIAL REVIEW: Client has 3 days for factual corrections. Stylistic rewrites count as a revision."
 
-    elif category == "Voice-Over":
+    # Audio
+    elif category == "🎙️ Voice-Over":
         clauses["acceptance"] = "CORRECTION POLICY: Includes 1 round for pronunciation/pacing errors. Script changes require a new fee."
         clauses["cancellation"] = "KILL FEE: 50% fee if cancelled after start. 100% fee if cancelled after recording session."
         
-    elif category == "Translation":
+    # Special Translaton
+    elif category == "🗣️ Translation":
         clauses["warranty"] = "ACCURACY WARRANTY: Provider guarantees >98% accuracy. Errors discovered within 7 days will be fixed free."
         clauses["cancellation"] = "KILL FEE: Cancellation after start incurs 50% fee. Cancellation after draft delivery incurs 100% fee."
 
@@ -297,7 +302,7 @@ with c1:
     st.markdown("# Stop Chasing Payments.")
     st.markdown('<p class="sub-hero">Generate watertight, MSME-protected contracts for Indian Freelancers in 30 seconds.</p>', unsafe_allow_html=True)
     
-    # Dynamic Greeting with Session State Check
+    # Dynamic Greeting
     if 'has_greeted' not in st.session_state:
         hour = datetime.datetime.now().hour
         greeting = "Good Morning" if 5 <= hour < 12 else "Good Afternoon" if 12 <= hour < 18 else "Good Evening"
