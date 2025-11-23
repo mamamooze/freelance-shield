@@ -14,7 +14,7 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# --- 2. CUSTOM CSS (High Contrast) ---
+# --- 2. CUSTOM CSS ---
 st.markdown(
     """
     <style>
@@ -36,124 +36,75 @@ st.markdown(
         }
         .stButton>button:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(37, 99, 235, 0.3); }
         [data-testid="stSidebar"] p, [data-testid="stSidebar"] label { color: #cbd5e1 !important; }
-        
-        /* Warning Box Styling */
         .warning-box {
-            background-color: rgba(255, 193, 7, 0.15);
-            border-left: 4px solid #ffc107;
-            padding: 10px;
-            margin-bottom: 10px;
-            border-radius: 4px;
-            color: #ffecb3;
-            font-size: 0.9rem;
+            background-color: rgba(255, 193, 7, 0.15); border-left: 4px solid #ffc107; padding: 10px; margin-bottom: 10px; border-radius: 4px; color: #ffecb3; font-size: 0.9rem;
+        }
+        /* Preview Box Styling */
+        .stTextArea textarea {
+            font-family: 'Courier New', monospace !important;
+            background-color: #0f172a !important;
+            color: #e2e8f0 !important;
+            border: 1px solid #3b82f6 !important;
         }
     </style>
     """,
     unsafe_allow_html=True,
 )
 
-# --- 3. STATE & TEMPLATES (UPDATED WITH 12 CATEGORIES) ---
+# --- 3. STATE & TEMPLATES ---
 if 'advance_rate' not in st.session_state: st.session_state.advance_rate = 50
 if 'slider_key' not in st.session_state: st.session_state.slider_key = 50
 if 'num_key' not in st.session_state: st.session_state.num_key = 50
 if 'scope_text' not in st.session_state: st.session_state.scope_text = ""
 
+# FULL 12 TEMPLATE LIBRARY (ANNEXURE A CONTENT)
 scope_templates = {
     "Select a template...": "",
     
-    "Video Editing": """DELIVERABLE: Edit 1 YouTube Video (max 10 mins)
-- FORMAT: MP4, 1080p HD, 30fps
-- COLOR: Professionally color graded to match brand palette
-- AUDIO: Normalized and mixed, background music copyright-free
-- REVISIONS: 2 feedback rounds included, each within 48 hours
-- DELIVERY: First draft sent to Client via Google Drive within 48 hours of raw file receipt
-- ACCEPTANCE: Client to provide review/approval within 2 days of delivery. Silence counts as acceptance.
-- EXCLUSIONS: No subtitle/captioning, thumbnail, or animation unless specified.""",
+    "Content Writing & Copywriting": """- 4 SEO blog articles, each 1000 words, in .docx format (Grammarly >90), delivered 2/week.
+- Topics approved in advance by Client.
+- 1 revision per article included.
+- No image sourcing, keyword research, or posting.""",
 
-    "Social Media Marketing": """DELIVERABLE: 12 Static Social Media Posts per month
-- FORMAT: PNG, RGB, 1200x1200px
-- BRIEF: Each post includes client-provided text and logo; 3 posts/week, approved by 25th monthly
-- DELIVERY: Shared via Google Drive/Dropbox folder, scheduled post calendar
-- REVISIONS: 2 rounds of changes/month included; further at agreed hourly rate
-- EXCLUSIONS: No paid ad management, audience growth, or influencer outreach
+    "Graphic Design": """- Logo (PNG/SVG, 3000px), Business Card/Banner (PDF/PNG, A6/A4 size), colors/fonts per Client.
+- 3 feedback rounds, 7 day timeline, excludes printing/stock.""",
 
-DELIVERABLE: 4 Instagram Reels per month
-- FORMAT: MP4, under 60s, trending audio, client review
-- CRITERIA: Relevant to monthly theme, on-brand colors and logos
-- DELIVERY: Drafts submitted by 15th monthly, feedback window 2 days""",
+    "UI/UX & Web Design": """- Wireframe + UI kit for 5 screens, Figma/Sketch/XD format, mobile responsive.
+- Delivery in 5 days, 2 revisions, acceptance by email.""",
 
-    "Web Development": """DELIVERABLE: 5-Page WordPress Website
-- DESIGN: Mobile responsive; consistent brand colors/fonts
-- FUNCTIONALITY: Speed score >80 on Google PageSpeed; Contact form; About page
-- TECHNOLOGY: Latest WordPress version, no obsolete plugins
-- DELIVERY: Staging link provided for review, final files after approval and payment
-- ACCEPTANCE: Client review within 5 days, max 2 revision rounds before final handoff
-- EXCLUSIONS: Domain/hosting fees not included; content/copywriting supplied by client""",
+    "Web Development": """- 5-page responsive website (WordPress/HTML/CSS/JS), speed score >80.
+- ZIP files after client sign-off.
+- No hosting/domain fees; Client provides content.""",
 
-    "Content Writing & Copywriting": """DELIVERABLE: Write 4 SEO blog articles (1000 words each)
-- FORMAT: .docx, Grammarly score >90, minimum Flesch score 60
-- TOPICS: Approved by client before writing; 1 revision per article included
-- DELIVERY: 2 articles/week, submitted via email by Friday EOD
-- ACCEPTANCE: Client reviews within 3 days; 1 round of changes free
-- EXCLUSIONS: No image sourcing, keyword research, or posting""",
+    "App Development": """- Android app with 5 features, APK + full source code, compiles on Android 11+.
+- Weekly sprints, bug fix for 30 days, client testing via builds.""",
 
-    "Graphic Design": """DELIVERABLE: Design logo, business card, and banner
-- FORMAT: Logo: PNG+SVG (3000px), Card/Banner: PDF+PNG (A6/A4 size)
-- BRIEF: Brand colors and fonts provided by client; 2 initial concepts
-- REVISIONS: Up to 3 rounds included, feedback within 2 business days
-- DELIVERY: Final files sent via Google Drive within 7 days
-- ACCEPTANCE: Written approval or feedback required; further revisions at hourly rate
-- EXCLUSIONS: No printing or stock images purchased by designer""",
+    "Video Editing & Animation": """- Edit 2 YouTube videos, up to 8 min, MP4 1080p, color/audio edited.
+- Excludes captions/thumbnails/stock, 2 revisions max.""",
 
-    "UI/UX & Web Design": """DELIVERABLE: Wireframe and UI kit for fintech app (5 screens)
-- FORMAT: Figma, Sketch, or Adobe XD files
-- CRITERIA: Mobile responsive, consistent design elements
-- DELIVERY: Initial draft within 5 days; prototype link sent to client
-- REVISIONS: 2 rounds free, feedback required within 3 days
-- ACCEPTANCE: Approval via email or platform chat, silence = acceptance
-- EXCLUSIONS: No development/coding, no branding or logo creation""",
+    "Social Media Marketing": """- 20 posts/month (PNG, 1080x1080px), 5/week, as briefed.
+- 4 reels/month (MP4 <60s, trending audio).""",
 
-    "App Development": """DELIVERABLE: Android app MVP (core 5 features)
-- FORMAT: APK + full source code (GitHub repo)
-- CRITERIA: Compiles on Android 11+, no critical crashes, UI as per wireframe
-- DELIVERY: First build in 14 days, weekly sprints, final build in 30 days
-- REVISIONS: 2 cycles per feature, bug-fixing for 30 days post-delivery
-- ACCEPTANCE: Client test/approve via feedback form
-- EXCLUSIONS: Google Play upload not included, advanced analytics extra""",
+    "SEO, SEM & Digital Marketing": """- Site audit (20 pages), 30 priority keywords, competitor analysis.
+- Excludes on-page, backlink, content rewriting.""",
 
-    "SEO, SEM & Digital Marketing": """DELIVERABLE: SEO audit + keyword plan for main site (20 pages)
-- FORMAT: PDF report, Excel keyword planner
-- CRITERIA: 30 priority keywords, competitor analysis summary
-- DELIVERY: Draft audit + keyword file in 7 days, feedback in 2 days
-- REVISIONS: 1 round included
-- EXCLUSIONS: On-page optimizations, backlinks, content rewriting unless stated""",
+    "Virtual Assistance/Admin": """- Email and calendar tasks managed Mon-Fri.
+- Daily Excel report.
+- No calls or travel booking.""",
 
-    "Virtual Assistance/Admin": """DELIVERABLE: Daily email management and meeting scheduling (20 days)
-- FORMAT: Report of task completion (Excel), inbox cleared daily
-- COMMUNICATION: WhatsApp or email updates each evening
-- AVAILABILITY: 9am-5pm, Monday-Friday, 24hr response window
-- REVISIONS: 1 round changes per week on task process
-- EXCLUSIONS: No calls, travel booking, or personal errands""",
+    "Photography & Photo Editing": """- 50 product JPEGs, 3000px, color balanced, white background.
+- One re-edit per batch of 10.
+- No props, prints, location booking.""",
 
-    "Photography & Photo Editing": """DELIVERABLE: Shoot and edit 50 product shots, e-commerce ready
-- FORMAT: JPEGs, 3000px, with basic retouching
-- TIMELINE: Shoot on location within 2 days, edits delivered in 3 days
-- CRITERIA: Clean white background, color balanced, cropped to size
-- REVISIONS: 1 re-edit round per batch of 10 photos
-- EXCLUSIONS: No video, prints, props, or location booking""",
+    "Translation & Transcription": """- Translate 10,000 English words to Hindi, Word/TXT format, accuracy >98%.
+- Transcribe 2 audio files (60 min), time-coded, .txt format.
+- 1 revision per job, 7-day warranty for corrections.
+- No subtitling, legal certification, or localization unless specified.""",
 
-    "Translation & Transcription": """DELIVERABLE: Translate 10K English words to Hindi + 2 transcriptions (60 mins audio)
-- FORMAT: Word or TXT file, time-coded transcription
-- ACCURACY: 98% minimum, industry-standard Hindi
-- DELIVERY: 3 days for translation, 2 days/audio for transcription
-- REVISIONS: 1 review/revision round included per job
-- EXCLUSIONS: No subtitling, localization for legal terms extra""",
-
-    "Voice-over/Audio Production": """DELIVERABLE: Record 3 commercial voice-overs (30s each) + edit client podcast episode (1hr)
-- FORMAT: WAV and MP3, commercial rights included
-- SCRIPT: Provided by client before booking
-- DELIVERY: Draft audio within 72 hours, 1 correction round per project
-- EXCLUSIONS: No music production, scriptwriting, or mixing unless requested"""
+    "Voice-over & Audio Production": """- 3 commercial voiceovers, each 30 sec, delivered in WAV & MP3, edited, royalty-free.
+- 1 podcast episode edit (1 hr), with noise cancellation and levels adjustment.
+- One retake per project, deadline [date]. Scripts provided by Client.
+- No music production/composition unless stated."""
 }
 
 def update_scope():
@@ -163,7 +114,74 @@ def update_scope():
 def update_from_slider(): st.session_state.num_key = st.session_state.slider_key
 def update_from_num(): st.session_state.slider_key = st.session_state.num_key
 
-# --- 4. SIDEBAR ---
+# --- 4. DYNAMIC LEGAL LOGIC (SMART CLAUSES) ---
+def get_smart_clauses(category, rate):
+    # Base Clauses
+    clauses = {
+        "acceptance": f"Client review within 5 days. Silence = Acceptance. 2 revisions included. Extra changes billed at {rate}/hr.",
+        "warranty": "Provided 'as-is'. No post-delivery support unless specified in Annexure A.",
+        "ip_rights": "Client owns IP only AFTER full payment. Use before payment is Copyright Infringement.",
+        "cancellation": "Cancellation after work starts incurs a forfeiture of the Advance Payment."
+    }
+
+    # 1. Content Writing & Copywriting
+    if category == "Content Writing & Copywriting":
+        clauses["warranty"] = "PLAGIARISM & EDITORIAL WARRANTY: All work must be original and plagiarism-free. Must meet stated readability (eg: Grammarly score >90)."
+        clauses["acceptance"] = "Client has 3 days for review; 1 revision per article included."
+
+    # 2. Graphic Design
+    elif category == "Graphic Design":
+        clauses["ip_rights"] = "IP transfers to Client upon final payment; source drafts (AI/PSD) NOT included unless specified. No physical print or stock image purchase included."
+        clauses["acceptance"] = "2 initial concepts per item. 3 feedback rounds included, feedback within 2 days per round."
+
+    # 3. UI/UX & Web Design
+    elif category == "UI/UX & Web Design":
+        clauses["warranty"] = "DESIGN ONLY: Provider delivers designs only, no coding/build/development included."
+        clauses["confidentiality"] = "No sharing of wireframes, prototypes, or concepts to third parties."
+
+    # 4. Web Development
+    elif category == "Web Development":
+        clauses["warranty"] = "Demo link delivered in 10 days. No hosting/domain/content writing included unless specified."
+        clauses["acceptance"] = "Client has 5 days for review. After approval and payment, files and code are released."
+
+    # 5. App Development
+    elif category == "App Development":
+        clauses["warranty"] = "30-day bug-fix included post-acceptance; extras billed. Provider not responsible for app store upload unless stated."
+        clauses["ip_rights"] = "Source code and rights transferred post payment. Use terms as described."
+
+    # 6. Video Editing & Animation
+    elif category == "Video Editing & Animation":
+        clauses["acceptance"] = "2 feedback rounds included; draft within 48 hours of receiving files. Client has 2 days for acceptance; no response = accepted."
+        
+    # 7. Social Media Marketing
+    elif category == "Social Media Marketing":
+        clauses["acceptance"] = "Posts delivered weekly. 2 feedback rounds per post/month."
+        
+    # 8. SEO, SEM & Digital Marketing
+    elif category == "SEO, SEM & Digital Marketing":
+        clauses["acceptance"] = "PDF/Excel delivered in 7 days. Client has 2 days for review."
+    
+    # 9. Virtual Assistance/Admin
+    elif category == "Virtual Assistance/Admin":
+        clauses["acceptance"] = "Daily email summary, WhatsApp for urgent requests."
+    
+    # 10. Photography & Photo Editing
+    elif category == "Photography & Photo Editing":
+        clauses["ip_rights"] = "Commercial rights transfer after payment. No props, prints, or location booking fees included."
+    
+    # 11. Translation & Transcription
+    elif category == "Translation & Transcription":
+        clauses["warranty"] = "ACCURACY WARRANTY: Translation >98% accuracy. Provider warrants correction of errors discovered within 7 days."
+        clauses["cancellation"] = "Cancellation after work has started incurs a 50% kill fee; after draft delivery, full fee due."
+    
+    # 12. Voice-over & Audio Production
+    elif category == "Voice-over & Audio Production":
+        clauses["acceptance"] = "1 correction/re-take per voiceover project included if notified within 5 days. Additional retakes billed at agreed rate."
+        clauses["cancellation"] = "KILL FEE: If cancelled after project start, 50% kill fee applies. If after recording session, full session rate due."
+
+    return clauses
+
+# --- 5. SIDEBAR ---
 with st.sidebar:
     if os.path.exists("logo.png"): st.image("logo.png", width=120)
     st.markdown("### 🏆 Why Trust Shield?")
@@ -180,7 +198,7 @@ with st.sidebar:
     st.write("Complex project? Don't risk it.")
     st.link_button("Hire Me for Review (₹499)", "https://wa.me/YOUR_NUMBER_HERE")
 
-# --- 5. MAIN UI ---
+# --- 6. MAIN UI ---
 c1, c2 = st.columns([2, 1])
 with c1:
     st.markdown("# Stop Chasing Payments.")
@@ -202,7 +220,9 @@ with tab1:
     c1, c2 = st.columns(2)
     with c1:
         freelancer_name = st.text_input("Provider Name (You)", "Amit Kumar")
-        selected_city = st.selectbox("Your City (Jurisdiction)", ["Bengaluru, Karnataka", "New Delhi, Delhi", "Mumbai, Maharashtra", "Chennai, Tamil Nadu", "Hyderabad, Telangana", "Other (Type Manually)"])
+        # Searchable City Dropdown
+        cities = ["Bengaluru, Karnataka", "New Delhi, Delhi", "Mumbai, Maharashtra", "Chennai, Tamil Nadu", "Hyderabad, Telangana", "Pune, Maharashtra", "Kolkata, West Bengal", "Gurugram, Haryana", "Noida, Uttar Pradesh", "Other (Type Manually)"]
+        selected_city = st.selectbox("Your City (Jurisdiction)", cities)
         jurisdiction_city = st.text_input("Type City", "Mysuru") if selected_city == "Other (Type Manually)" else selected_city
     with c2:
         client_name = st.text_input("Client Name", "Tech Solutions Pvt Ltd")
@@ -210,12 +230,9 @@ with tab1:
 
 with tab2:
     st.markdown("### 🎯 What are you delivering?")
-    
-    # WARNING BOX
-    st.markdown('<div class="warning-box">⚠️ <b>NOTE:</b> These are just templates. Please edit the text below to match your specific project details (dates, quantities, file formats) before generating.</div>', unsafe_allow_html=True)
-    
-    st.selectbox("✨ Start with a template:", list(scope_templates.keys()), key="template_selector", on_change=update_scope)
-    scope_work = st.text_area("Scope of Work (Annexure A)", key="scope_text", height=300)
+    st.markdown('<div class="warning-box">⚠️ <b>NOTE:</b> Selecting a category adjusts the <b>Legal Clauses</b> (IP Rights, Warranty) to match your industry risks.</div>', unsafe_allow_html=True)
+    template_choice = st.selectbox("✨ Select Industry (Smart Clauses):", list(scope_templates.keys()), key="template_selector", on_change=update_scope)
+    scope_work = st.text_area("Scope of Work (Annexure A)", key="scope_text", height=200)
 
 with tab3:
     st.markdown("### 💰 Financial Terms")
@@ -234,29 +251,62 @@ st.markdown("---")
 c_main = st.columns([1, 2, 1])
 with c_main[1]: generate_btn = st.button("🚀 Generate Legal Contract Now", type="primary")
 
-# --- 6. GENERATION LOGIC ---
+# --- 7. GENERATION LOGIC ---
 if generate_btn:
     safe_cost = f"Rs. {project_fee_num:,}"
     safe_rate = f"Rs. {hourly_rate_num:,}"
     safe_scope = st.session_state.scope_text.replace("₹", "Rs. ")
     gst_clause = "(Exclusive of GST)" if gst_registered else ""
 
-    # CONTRACT TEXT CONSTRUCTION
+    # FETCH SMART CLAUSES
+    smart = get_smart_clauses(template_choice, safe_rate)
+    
+    # Ensure cancellation key exists (fallback for generic templates)
+    cancel_clause = smart.get("cancellation", "Cancellation after work starts incurs a forfeiture of the Advance Payment.")
+
+    # CONTRACT TEXT
     full_contract_text = "PROFESSIONAL SERVICE AGREEMENT\n"
     full_contract_text += f"Date: {datetime.date.today().strftime('%B %d, %Y')}\n\n"
     full_contract_text += f"BETWEEN: {freelancer_name} (Provider) AND {client_name} (Client)\n"
     full_contract_text += "-"*60 + "\n\n"
     
-    # Clauses (Full set from previous update)
+    # Clauses
     full_contract_text += f"1. PAYMENT & INTEREST (MSME ACT)\n"
-    full_contract_text += f"Total Fee: {safe_cost} {gst_clause}. Advance: {advance_percent}%. Late payments attract compound interest at 3x the Bank Rate (Section 16, MSMED Act, 2006).\n\n"
-    full_contract_text += "2. ACCEPTANCE & REVISIONS\nClient review within 5 days. Silence = Acceptance. 2 revisions included. Further changes billed at " + safe_rate + "/hr.\n\n"
-    full_contract_text += "3. CONFIDENTIALITY (NDA)\nStrict confidentiality for 2 years post-termination.\n\n"
-    full_contract_text += "4. IP RIGHTS (IP LOCK)\nClient owns IP only AFTER full payment. Use before payment is Copyright Infringement.\n\n"
-    full_contract_text += "5. WARRANTY & SUPPORT\nProvided 'as-is'. No post-delivery support unless specified in Annexure A.\n\n"
-    full_contract_text += "6. COMMUNICATION POLICY\nProvider responds within 1 business day. Client silence >14 days = Termination (Ghosting).\n\n"
-    full_contract_text += "7. FORCE MAJEURE\nNot liable for acts of God or internet failure.\n\n"
-    full_contract_text += "8. JURISDICTION\nDisputes subject to Arbitration in " + jurisdiction_city + ", India.\n\n"
+    # HERE IS THE FIX: Replaced hardcoded percentage with variable {advance_percent}
+    full_contract_text += f"Total Fee: {safe_cost} {gst_clause}. Advance: {advance_percent}% (Non-refundable). Work commences only upon realization of advance.\n"
+    full_contract_text += "Late payments attract compound interest at 3x the Bank Rate notified by RBI (Section 16, MSMED Act, 2006).\n\n"
+    
+    full_contract_text += "2. ACCEPTANCE & REVISIONS\n"
+    full_contract_text += f"{smart['acceptance']}\n\n"
+    
+    full_contract_text += "3. CONFIDENTIALITY (NDA)\n"
+    full_contract_text += "Both parties agree to keep proprietary information confidential during and for two (2) years after termination.\n\n"
+    
+    full_contract_text += "4. IP RIGHTS (IP LOCK)\n"
+    full_contract_text += f"{smart['ip_rights']}\n\n"
+    
+    full_contract_text += "5. WARRANTY & SUPPORT\n"
+    full_contract_text += f"{smart['warranty']}\n\n"
+    
+    full_contract_text += "6. COMMUNICATION POLICY\n"
+    full_contract_text += "Provider will respond within 1 business day. If Client is unresponsive for >14 days, the contract terminates (Ghosting Clause). Standby fee of Rs. 500/day applies for extended delays.\n\n"
+    
+    full_contract_text += "7. FORCE MAJEURE\n"
+    full_contract_text += "Neither party is liable for delays caused by natural disasters, pandemics, or internet infrastructure failures.\n\n"
+    
+    full_contract_text += "8. LIMITATION OF LIABILITY\n"
+    if "liability" in smart:
+        full_contract_text += f"{smart['liability']} "
+    full_contract_text += "Provider's total liability shall not exceed the Total Project Fee paid. No liability for indirect damages.\n\n"
+
+    full_contract_text += "9. CANCELLATION / KILL FEE\n"
+    full_contract_text += f"{cancel_clause}\n\n"
+
+    full_contract_text += "10. JURISDICTION & AMENDMENT\n"
+    full_contract_text += "Amendments must be in writing. Disputes subject to Arbitration in " + jurisdiction_city + ", India.\n\n"
+    
+    full_contract_text += "11. GST COMPLIANCE\n"
+    full_contract_text += "All fees are exclusive of applicable GST. Client bears GST liability. Provider warrants tax compliance.\n\n"
     
     full_contract_text += "-"*60 + "\n"
     full_contract_text += "IN WITNESS WHEREOF, the parties have executed this Agreement.\n\n"
