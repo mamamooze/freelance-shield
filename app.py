@@ -29,7 +29,7 @@ st.markdown(
             background-attachment: fixed;
         }
 
-        /* HERO TITLE GRADIENT */
+        /* TYPOGRAPHY */
         h1 {
             background: -webkit-linear-gradient(45deg, #ffffff, #00d2ff);
             -webkit-background-clip: text;
@@ -138,9 +138,6 @@ st.markdown(
 )
 
 # --- 3. STATE & LOGIC ---
-if 'advance_rate' not in st.session_state: st.session_state.advance_rate = 50
-if 'slider_key' not in st.session_state: st.session_state.slider_key = 50
-if 'num_key' not in st.session_state: st.session_state.num_key = 50
 if 'scope_text' not in st.session_state: st.session_state.scope_text = ""
 
 # --- DOCX GENERATOR ---
@@ -156,13 +153,13 @@ def create_docx(full_text, annexure_text):
     buffer.seek(0)
     return buffer
 
-# --- FULL TEMPLATE LIBRARY ---
+# --- TEMPLATES ---
 scope_templates = {
     "Select a template...": "",
     "✍️ Content Writing": """DELIVERABLE: 4 SEO Blog Articles (1000 words each)\n- FORMAT: .docx, Grammarly score >90\n- TOPICS: Approved by Client in advance\n- DELIVERY: 2 articles/week via email\n- REVISIONS: 1 round included per article\n- EXCLUSIONS: No image sourcing, keyword research, or posting""",
     "🎨 Graphic Design": """DELIVERABLE: Logo (PNG/SVG), Business Card (PDF), Banner\n- BRIEF: Colors/Fonts provided by Client\n- REVISIONS: 3 feedback rounds included (within 2 days)\n- DELIVERY: Final files via Google Drive in 7 days\n- EXCLUSIONS: No printing costs or stock image purchase""",
     "🖼️ UI/UX & Web Design": """DELIVERABLE: Wireframe + UI Kit (5 Screens)\n- FORMAT: Figma/Sketch/XD files\n- TIMELINE: Initial draft in 5 days\n- REVISIONS: 2 rounds included\n- EXCLUSIONS: No coding/development included""",
-    "💻 Web Development": """DELIVERABLE: 5-Page WordPress Site\n- SPECS: Speed score >80, Contact Form, About Page\n- DELIVERY: Staging link for review, ZIP files after payment\n- REVISIONS: 2 rounds included\n- EXCLUSIONS: Domain/Hosting fees and content writing not included""",
+    "💻 Web Development": """DELIVERABLE: 5-Page Responsive Website (WordPress)\n- SPECS: Speed score >80, Contact Form, About Page\n- DELIVERY: Staging link for review, ZIP files after payment\n- REVISIONS: 2 rounds included\n- EXCLUSIONS: Domain/Hosting fees and content writing not included""",
     "📱 App Development": """DELIVERABLE: Android App MVP (5 Core Features)\n- SPECS: Compiles on Android 11+, Source Code included\n- TIMELINE: Weekly sprints, 30-day bug fix warranty\n- EXCLUSIONS: Google Play Store upload fees not included""",
     "🎥 Video Editing": """DELIVERABLE: Edit 2 YouTube Videos (max 8 mins)\n- FORMAT: MP4, 1080p, Color Graded\n- TIMELINE: Draft within 48 hours of receiving raw files\n- REVISIONS: 2 feedback rounds included\n- EXCLUSIONS: No captions, thumbnails, or stock footage""",
     "📱 Social Media Marketing": """DELIVERABLE: 12 Static Posts + 4 Reels (Monthly)\n- FORMAT: PNG (1080px) and MP4 (<60s)\n- SCHEDULE: 3 posts/week, approved by 25th of prev month\n- REVISIONS: 2 rounds per month included\n- EXCLUSIONS: No paid ad management or community replies""",
@@ -177,49 +174,31 @@ def update_scope():
     if st.session_state.template_selector != "Select a template...":
         st.session_state.scope_text = scope_templates[st.session_state.template_selector]
 
-def update_from_slider(): st.session_state.num_key = st.session_state.slider_key
-def update_from_num(): st.session_state.slider_key = st.session_state.num_key
-
-# --- SMART LEGAL LOGIC (CRITICAL FIX: MATCHING EMOJIS) ---
 def get_smart_clauses(category, rate):
-    # Base Clauses
     clauses = {
         "acceptance": f"Client review within 5 days. Silence = Acceptance. 2 revisions included. Extra changes billed at {rate}/hr.",
         "warranty": "Provided 'as-is'. No post-delivery support unless specified in Annexure A.",
         "ip_rights": "Client owns IP only AFTER full payment. Use before payment is Copyright Infringement.",
         "cancellation": "Cancellation after work starts incurs a forfeiture of the Advance Payment."
     }
-
-    # Tech (Emojis match template keys exactly)
     if category in ["💻 Web Development", "📱 App Development"]:
         clauses["warranty"] = f"BUG FIX WARRANTY: Provider agrees to fix critical bugs reported within 30 days. Feature changes billed at {rate}/hr."
         clauses["ip_rights"] = "CODE OWNERSHIP: Client receives full source code rights upon payment. Provider retains rights to generic libraries."
-    
-    # Creative
     elif category in ["🎨 Graphic Design", "🎥 Video Editing", "🖼️ UI/UX & Web Design", "📸 Photography"]:
         clauses["acceptance"] = "CREATIVE APPROVAL: Rejections based on 'personal taste' after initial style approval will be billed as a new Change Order."
         clauses["ip_rights"] = "SOURCE FILES: Final deliverables transfer upon payment. Raw source files (PSD/PrProj) remain property of Provider unless purchased."
-
-    # Marketing
     elif category in ["📱 Social Media Marketing", "📈 SEO & Digital Marketing"]:
         clauses["warranty"] = "NO ROI GUARANTEE: Provider does NOT guarantee specific results (Likes, Sales, Rankings) as platform algorithms are external."
         clauses["acceptance"] = "APPROVAL WINDOW: Content must be approved 24 hours prior to publishing deadlines."
-
-    # Text
     elif category in ["✍️ Content Writing", "🗣️ Translation"]:
         clauses["warranty"] = "ORIGINALITY WARRANTY: Provider warrants that work is original and passes standard plagiarism checks."
         clauses["acceptance"] = "EDITORIAL REVIEW: Client has 3 days for factual corrections. Stylistic rewrites count as a revision."
-
-    # Audio
     elif category == "🎙️ Voice-Over":
         clauses["acceptance"] = "CORRECTION POLICY: Includes 1 round for pronunciation/pacing errors. Script changes require a new fee."
         clauses["cancellation"] = "KILL FEE: 50% fee if cancelled after start. 100% fee if cancelled after recording session."
-        
-    # Special Translation Logic
-    if category == "🗣️ Translation":
+    elif category == "🗣️ Translation":
         clauses["warranty"] = "ACCURACY WARRANTY: Provider guarantees >98% accuracy. Errors discovered within 7 days will be fixed free."
         clauses["cancellation"] = "KILL FEE: Cancellation after start incurs 50% fee. Cancellation after draft delivery incurs 100% fee."
-
     return clauses
 
 # --- 4. SIDEBAR ---
@@ -302,11 +281,9 @@ with tab3:
     with c1: project_fee_num = st.number_input("Total Project Fee (INR)", value=50000, step=1000, help="Total contract value")
     with c2: hourly_rate_num = st.number_input("Overtime Rate (INR/hr)", value=2000, step=500, help="Rate for Scope Creep")
     with c3:
-        st.write("Advance Required (%)")
-        sc1, sc2 = st.columns([3, 1])
-        with sc1: st.slider("Slider", 0, 100, key="slider_key", on_change=update_from_slider, label_visibility="collapsed")
-        with sc2: st.number_input("Num", 0, 100, key="num_key", on_change=update_from_num, label_visibility="collapsed")
-        advance_percent = st.session_state.slider_key
+        # SIMPLIFIED SLIDER (Fixes "Double Input" Issue)
+        advance_percent = st.slider("Advance Required (%)", 0, 100, 50, help="Industry standard is 30-50%")
+    
     st.info(f"ℹ️ **Calculation:** You will receive **Rs. {int(project_fee_num * (advance_percent/100)):,}** before starting work.")
 
 st.markdown("---")
@@ -323,90 +300,97 @@ with c_main[1]:
         generate_btn = False
 
 if generate_btn:
-    with st.spinner("Drafting your watertight contract..."):
-        time.sleep(1.5)
-    
-    safe_cost = f"Rs. {project_fee_num:,}"
-    safe_rate = f"Rs. {hourly_rate_num:,}"
-    safe_scope = st.session_state.scope_text.replace("₹", "Rs. ")
-    gst_clause = "(Exclusive of GST)" if gst_registered else ""
-    smart = get_smart_clauses(template_choice, safe_rate)
-    cancel_clause = smart.get("cancellation", "Cancellation after work starts incurs a forfeiture of the Advance Payment.")
-
-    full_text = f"""
-    PROFESSIONAL SERVICE AGREEMENT
-    Date: {datetime.date.today().strftime('%B %d, %Y')}
-    
-    BETWEEN: {freelancer_name} (Provider) AND {client_name} (Client)
-    
-    1. PAYMENT & INTEREST (MSME ACT)
-    Total Fee: {safe_cost} {gst_clause}. Advance: {advance_percent}%.
-    Late payments attract compound interest at 3x the Bank Rate (Section 16, MSMED Act, 2006).
-    
-    2. ACCEPTANCE & REVISIONS
-    {smart['acceptance']}
-    
-    3. CONFIDENTIALITY (NDA)
-    Strict confidentiality for 2 years post-termination.
-    
-    4. IP RIGHTS (IP LOCK)
-    {smart['ip_rights']}
-    
-    5. WARRANTY & SUPPORT
-    {smart['warranty']}
-    
-    6. COMMUNICATION POLICY
-    Provider responds within 1 business day. Client silence >14 days = Termination (Ghosting).
-    
-    7. FORCE MAJEURE
-    Not liable for acts of God or internet failure.
-    
-    8. LIMITATION OF LIABILITY
-    Liability limited to Total Fee paid. No indirect damages.
-    
-    9. CANCELLATION / KILL FEE
-    {cancel_clause}
-    
-    10. JURISDICTION
-    Disputes subject to Arbitration in {jurisdiction_city}, India.
-    
-    11. GST COMPLIANCE
-    Client bears GST liability.
-    
-    ---------------------------------------------------
-    SIGNED BY PROVIDER: {freelancer_name}
-    SIGNED BY CLIENT: {client_name}
-    """
-
-    # PDF
-    pdf = FPDF()
-    pdf.add_page()
-    if os.path.exists("logo.png"):
-        try: pdf.image("logo.png", 10, 8, 25); pdf.ln(20)
-        except: pass
-    pdf.set_font("Arial", size=10)
-    pdf.multi_cell(0, 5, full_text.encode('latin-1', 'replace').decode('latin-1'))
-    pdf.add_page()
-    pdf.set_font("Arial", 'B', size=12)
-    pdf.cell(0, 10, "ANNEXURE A: SCOPE OF WORK", ln=True)
-    pdf.ln(5)
-    pdf.set_font("Arial", size=10)
-    pdf.multi_cell(0, 5, safe_scope.encode('latin-1', 'replace').decode('latin-1'))
-    pdf_data = pdf.output(dest='S').encode('latin-1')
-
-    # WORD
-    docx_data = create_docx(full_text, safe_scope)
-
-    # UI OUTPUT
-    st.success("✅ Contract Ready! Choose your format below.")
-    col_d1, col_d2 = st.columns(2)
-    with col_d1:
-        st.download_button("📄 Download as PDF", data=pdf_data, file_name="Contract.pdf", mime="application/pdf", use_container_width=True)
-    with col_d2:
-        st.download_button("📝 Download as Word (Editable)", data=docx_data, file_name="Contract.docx", mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document", use_container_width=True)
+    if template_choice == "Select a template..." or template_choice == "":
+        st.error("⚠️ Please select an Industry Template in 'The Work' tab before generating.")
+    else:
+        with st.spinner("Drafting your watertight contract..."):
+            time.sleep(1.5)
         
-    with st.expander("👀 View Preview"):
-        st.text_area("", value=full_text + "\n\n" + safe_scope, height=300)
+        safe_cost = f"Rs. {project_fee_num:,}"
+        safe_rate = f"Rs. {hourly_rate_num:,}"
+        safe_scope = st.session_state.scope_text.replace("₹", "Rs. ")
+        gst_clause = "(Exclusive of GST)" if gst_registered else ""
+        smart = get_smart_clauses(template_choice, safe_rate)
+        cancel_clause = smart.get("cancellation", "Cancellation after work starts incurs a forfeiture of the Advance Payment.")
+
+        full_text = f"""
+        PROFESSIONAL SERVICE AGREEMENT
+        Date: {datetime.date.today().strftime('%B %d, %Y')}
+        
+        BETWEEN: {freelancer_name} (Provider) AND {client_name} (Client)
+        
+        1. PAYMENT & INTEREST (MSME ACT)
+        Total Fee: {safe_cost} {gst_clause}. Advance: {advance_percent}%.
+        Late payments attract compound interest at 3x the Bank Rate (Section 16, MSMED Act, 2006).
+        
+        2. ACCEPTANCE & REVISIONS
+        {smart['acceptance']}
+        
+        3. CONFIDENTIALITY (NDA)
+        Strict confidentiality for 2 years post-termination.
+        
+        4. IP RIGHTS (IP LOCK)
+        {smart['ip_rights']}
+        
+        5. WARRANTY & SUPPORT
+        {smart['warranty']}
+        
+        6. COMMUNICATION POLICY
+        Provider responds within 1 business day. Client silence >14 days = Termination (Ghosting).
+        
+        7. FORCE MAJEURE
+        Not liable for acts of God or internet failure.
+        
+        8. LIMITATION OF LIABILITY
+        Liability limited to Total Fee paid. No indirect damages.
+        
+        9. CANCELLATION / KILL FEE
+        {cancel_clause}
+        
+        10. JURISDICTION
+        Disputes subject to Arbitration in {jurisdiction_city}, India.
+        
+        11. GST COMPLIANCE
+        Client bears GST liability.
+        
+        ---------------------------------------------------
+        SIGNED BY PROVIDER: {freelancer_name}
+        SIGNED BY CLIENT: {client_name}
+        """
+
+        # PDF
+        pdf = FPDF()
+        pdf.add_page()
+        if os.path.exists("logo.png"):
+            try: pdf.image("logo.png", 10, 8, 25); pdf.ln(20)
+            except: pass
+        pdf.set_font("Arial", size=10)
+        # CRITICAL FIX: Sanitize text for PDF
+        clean_main = full_text.encode('latin-1', 'replace').decode('latin-1')
+        clean_scope_pdf = safe_scope.encode('latin-1', 'replace').decode('latin-1')
+        
+        pdf.multi_cell(0, 5, clean_main)
+        pdf.add_page()
+        pdf.set_font("Arial", 'B', size=12)
+        pdf.cell(0, 10, "ANNEXURE A: SCOPE OF WORK", ln=True)
+        pdf.ln(5)
+        pdf.set_font("Arial", size=10)
+        pdf.multi_cell(0, 5, clean_scope_pdf)
+        pdf_data = pdf.output(dest='S').encode('latin-1')
+
+        # WORD
+        docx_data = create_docx(full_text, safe_scope)
+
+        # UI OUTPUT
+        st.success("✅ Contract Generated Successfully! Choose your format below.")
+        col_d1, col_d2 = st.columns(2)
+        with col_d1:
+            st.download_button("📄 Download as PDF", data=pdf_data, file_name="Contract.pdf", mime="application/pdf", use_container_width=True)
+        with col_d2:
+            st.download_button("📝 Download as Word (Editable)", data=docx_data, file_name="Contract.docx", mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document", use_container_width=True)
+            
+        with st.expander("👀 View Preview"):
+            st.text_area("", value=full_text + "\n\n" + safe_scope, height=300)
 
 # --- LEGAL FOOTER ---
 st.markdown("---")
