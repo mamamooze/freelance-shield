@@ -1,306 +1,306 @@
-# app.py
 import streamlit as st
 from fpdf import FPDF
 import datetime
 import os
-import io
-import base64
-import json
-from email.message import EmailMessage
-import smtplib
 
-# -------- ASSET: use the uploaded PNG logo (exact path) ----------
-# developer requested the uploaded file path be used as the logo url
-LOGO_PATH = "/mnt/data/aee8022b-3e6e-40f0-b80b-1bf200509a79.png"
-PAGE_ICON = LOGO_PATH if os.path.exists(LOGO_PATH) else "🛡️"
+# --- 1. SETUP & CONFIG ---
+icon_path = "logo.png"
+page_icon = icon_path if os.path.exists(icon_path) else "🛡️"
 
-st.set_page_config(page_title="Freelance Shield Pro",
-                   page_icon=PAGE_ICON,
-                   layout="wide",
-                   initial_sidebar_state="auto")
+st.set_page_config(
+    page_title="Freelance Shield Pro",
+    page_icon=page_icon,
+    layout="wide",
+    initial_sidebar_state="expanded",
+)
 
-# -------- SIMPLE CSS ----------
+# --- 2. CUSTOM CSS (THE UI OVERHAUL) ---
 st.markdown(
-    f"""
+    """
     <style>
-    .stApp{{background: linear-gradient(rgba(10,10,12,0.95), rgba(10,10,12,0.9));}}
-    .hero-title{{font-size:2.2rem; font-weight:800; color:#fff; margin:0;}}
-    .hero-sub{{color:#94a3b8; margin-top:6px; font-size:1.05rem}}
-    .trust-badge{{background:rgba(255,255,255,0.03); padding:6px 10px; border-radius:6px; color:#94a3b8; font-weight:600}}
-    .stButton>button{{background:linear-gradient(90deg,#3b82f6,#2563eb); color:#fff; border-radius:8px; padding:10px 18px;}}
-    [data-testid="stSidebar"]{{background:#071024; color:#cbd5e1}}
-    .panel{{background:rgba(255,255,255,0.03); padding:16px; border-radius:10px;}}
+        /* BACKGROUND */
+        .stApp {
+            background-image: linear-gradient(rgba(10, 10, 20, 0.95), rgba(10, 10, 20, 0.90)), 
+            url("https://raw.githubusercontent.com/mamamooze/freelance-shield/main/background.png");
+            background-size: cover;
+            background-attachment: fixed;
+        }
+
+        /* TYPOGRAPHY */
+        h1 {
+            font-family: 'Inter', sans-serif;
+            color: #ffffff !important;
+            font-weight: 800;
+            font-size: 3.5rem;
+            letter-spacing: -1px;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+        }
+        h2, h3 {
+            color: #f8f9fa !important;
+            font-family: 'Inter', sans-serif;
+        }
+        .sub-hero {
+            color: #a0a0a0 !important;
+            font-size: 1.3rem;
+            margin-bottom: 30px;
+        }
+
+        /* INPUT FIELDS (Main Area) */
+        .stTextInput input, .stNumberInput input, .stTextArea textarea, .stSelectbox div[data-baseweb="select"] {
+            background-color: #1e293b !important;
+            color: #ffffff !important;
+            border: 1px solid #334155 !important;
+            border-radius: 8px;
+        }
+        
+        /* PREVIEW BOX STYLING */
+        .stTextArea textarea {
+            font-family: 'Courier New', monospace !important;
+            background-color: #0f172a !important;
+            color: #e2e8f0 !important;
+            border: 1px solid #3b82f6 !important;
+        }
+        
+        /* TABS STYLING */
+        .stTabs [data-baseweb="tab-list"] {
+            gap: 10px;
+            border-bottom: 1px solid #334155;
+        }
+        .stTabs [data-baseweb="tab"] {
+            background-color: transparent;
+            border-radius: 5px;
+            color: #94a3b8;
+            font-weight: 600;
+        }
+        .stTabs [aria-selected="true"] {
+            background-color: #3b82f6;
+            color: white !important;
+        }
+
+        /* BUTTONS */
+        .stButton>button {
+            background: linear-gradient(90deg, #3b82f6, #2563eb);
+            color: white;
+            font-weight: bold;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            width: 100%;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s;
+        }
+        .stButton>button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(37, 99, 235, 0.3);
+        }
+
+        /* SIDEBAR (The Trust Column) */
+        [data-testid="stSidebar"] {
+            background-color: #0f172a;
+            border-right: 1px solid #1e293b;
+        }
+        [data-testid="stSidebar"] h1, [data-testid="stSidebar"] h2, [data-testid="stSidebar"] h3, [data-testid="stSidebar"] p {
+            color: #cbd5e1 !important;
+        }
     </style>
     """,
     unsafe_allow_html=True,
 )
 
-# -------- Session defaults ----------
-if "step" not in st.session_state:
-    st.session_state.step = 1
-if "scope_templates" not in st.session_state:
-    st.session_state.scope_templates = {
-        "None": "",
-        "Social Media Marketing": "1. DELIVERABLE: 12 Static Posts/month\n   - CRITERIA: PNG, deliver by 25th.\n2. DELIVERABLE: 4 Reels/month (<60s).",
-        "Video Editing": "1. DELIVERABLE: Edit 1 YouTube Video (10 mins)\n   - CRITERIA: 1080p, color grade, audio mix.\n2. TIMELINE: Draft in 48 hours.",
-        "Web Development": "1. DELIVERABLE: 5-Page WordPress Site\n   - CRITERIA: Mobile responsive, speed > 80.\n2. EXCLUSION: Domain & hosting fees."
-    }
+# --- 3. SESSION STATE & LISTS ---
+if 'advance_rate' not in st.session_state:
+    st.session_state.advance_rate = 50
+if 'scope_text' not in st.session_state:
+    st.session_state.scope_text = ""
 
-# -------- Helpers ----------
-def build_contract(values: dict) -> str:
-    date = datetime.date.today().strftime("%B %d, %Y")
-    gst_note = "(Exclusive of GST)" if values.get("gst_registered") else ""
-    total_fee = f"Rs. {int(values['project_fee']):,}"
-    advance_amt = int(values['project_fee'] * (values['advance_percent'] / 100))
-    advance_text = f"Advance: {values['advance_percent']}% (Rs. {advance_amt:,})"
-    scope_text = values.get("scope", "").strip() or "Scope will be attached in Annexure A."
+# City List for Dropdown
+indian_cities = [
+    "Bengaluru, Karnataka", "New Delhi, Delhi", "Mumbai, Maharashtra", "Chennai, Tamil Nadu", 
+    "Hyderabad, Telangana", "Pune, Maharashtra", "Kolkata, West Bengal", "Gurugram, Haryana", 
+    "Noida, Uttar Pradesh", "Ahmedabad, Gujarat", "Jaipur, Rajasthan", "Chandigarh", 
+    "Lucknow, Uttar Pradesh", "Kochi, Kerala", "Indore, Madhya Pradesh", "Nagpur, Maharashtra", 
+    "Coimbatore, Tamil Nadu", "Bhopal, Madhya Pradesh", "Visakhapatnam, Andhra Pradesh", 
+    "Surat, Gujarat", "Patna, Bihar", "Bhubaneswar, Odisha", "Guwahati, Assam", "Goa", 
+    "Dehradun, Uttarakhand", "Ranchi, Jharkhand", "Other (Type Manually)"
+]
 
-    sections = [
-        "PROFESSIONAL SERVICES AGREEMENT",
-        f"Date: {date}\n",
-        f"BETWEEN: {values['freelancer_name']} (Provider) AND {values['client_name']} (Client)",
-        "-" * 60,
-        f"1. PAYMENT: Total Fee {total_fee} {gst_note}. {advance_text}. Late payments attract 3x MSME interest (where applicable).",
-        f"2. JURISDICTION: Disputes subject to courts in {values['jurisdiction_city']}.",
-        "3. IP RIGHTS: Client owns IP only AFTER full payment.",
-        "4. TERMINATION: 14 days of client silence = Contract may terminate; provider keeps advance.",
-        "\nANNEXURE A: SCOPE OF WORK\n",
-        scope_text,
-        "\nIN WITNESS WHEREOF, the parties have executed this Agreement.\n",
-        "SIGNED BY PROVIDER:\n_________________________\n" + values['freelancer_name'],
-        "\nSIGNED BY CLIENT:\n_________________________\n" + values['client_name']
-    ]
-    return "\n\n".join(sections)
+scope_templates = {
+    "Select a template...": "",
+    "Social Media Marketing": "1. DELIVERABLE: 12 Static Posts/month\n   - CRITERIA: PNG Format, Approved by 25th.\n2. DELIVERABLE: 4 Reels/month\n   - CRITERIA: Under 60s, trending audio.",
+    "Video Editing": "1. DELIVERABLE: Edit 1 YouTube Video (10 mins)\n   - CRITERIA: 1080p, Color Graded, Audio Mixed.\n2. TIMELINE: Draft delivered within 48 hours.",
+    "Web Development": "1. DELIVERABLE: 5-Page WordPress Site\n   - CRITERIA: Mobile responsive, Speed score >80.\n2. EXCLUSION: Domain and Hosting fees."
+}
 
-def generate_pdf_fpdf(contract_text: str, scope_text: str, logo_path: str = None) -> bytes:
-    pdf = FPDF()
-    pdf.add_page()
-    if logo_path and os.path.exists(logo_path):
-        try:
-            pdf.image(logo_path, 10, 8, 30)
-            pdf.ln(22)
-        except Exception:
-            pass
-    pdf.set_font("Arial", size=10)
-    safe = contract_text.encode("latin-1", "replace").decode("latin-1")
-    for line in safe.splitlines():
-        pdf.multi_cell(0, 6, line)
-    pdf.add_page()
-    pdf.set_font("Arial", "B", 12)
-    pdf.cell(0, 10, "ANNEXURE A: SCOPE OF WORK", ln=True)
-    pdf.ln(4)
-    pdf.set_font("Arial", size=10)
-    scope_safe = scope_text.encode("latin-1", "replace").decode("latin-1")
-    pdf.multi_cell(0, 6, scope_safe or "(empty)")
-    return pdf.output(dest="S").encode("latin-1")
+def update_scope():
+    selection = st.session_state.template_selector
+    if selection != "Select a template...":
+        st.session_state.scope_text = scope_templates[selection]
 
-def pdf_bytes(contract_text: str, scope_text: str) -> bytes:
-    # Prefer reportlab if installed for better UTF-8; fallback to FPDF (kept simple here)
-    try:
-        # lazy import to avoid requiring reportlab
-        from reportlab.lib.pagesizes import A4
-        from reportlab.pdfgen import canvas
-        import io
-        buffer = io.BytesIO()
-        c = canvas.Canvas(buffer, pagesize=A4)
-        width, height = A4
-        y = height - 50
-        if os.path.exists(LOGO_PATH):
-            try:
-                c.drawImage(LOGO_PATH, 40, y - 40, width=120, preserveAspectRatio=True, mask='auto')
-                y -= 70
-            except Exception:
-                pass
-        c.setFont("Helvetica", 10)
-        for line in contract_text.splitlines():
-            c.drawString(40, y, line)
-            y -= 14
-            if y < 80:
-                c.showPage()
-                y = height - 50
-        c.showPage()
-        c.drawString(40, height - 50, "ANNEXURE A: SCOPE OF WORK")
-        y = height - 80
-        for line in scope_text.splitlines():
-            c.drawString(40, y, line)
-            y -= 14
-            if y < 60:
-                c.showPage()
-                y = height - 50
-        c.save()
-        buffer.seek(0)
-        return buffer.read()
-    except Exception:
-        # fallback
-        return generate_pdf_fpdf(contract_text, scope_text, LOGO_PATH)
-
-def send_email_with_attachment(smtp_host: str, smtp_port: int, smtp_user: str, smtp_password: str,
-                               to_email: str, subject: str, body: str, attachment_bytes: bytes, attachment_name: str):
-    msg = EmailMessage()
-    msg["From"] = smtp_user
-    msg["To"] = to_email
-    msg["Subject"] = subject
-    msg.set_content(body)
-    msg.add_attachment(attachment_bytes, maintype="application", subtype="pdf", filename=attachment_name)
-
-    with smtplib.SMTP(smtp_host, smtp_port, timeout=20) as s:
-        s.starttls()
-        s.login(smtp_user, smtp_password)
-        s.send_message(msg)
-
-# -------- SIDEBAR ----------
+# --- 4. SIDEBAR (TRUST & UPSELL) ---
 with st.sidebar:
-    if os.path.exists(LOGO_PATH):
-        st.image(LOGO_PATH, width=140)
-    st.markdown("### Why Freelance Shield")
-    st.markdown("- MSME-friendly: includes statutory-interest clause")
-    st.markdown("- Anti-ghosting: auto-termination protection")
-    st.markdown("- IP lock: you retain rights until payment clears")
-    st.markdown("---")
+    if os.path.exists("logo.png"):
+        st.image("logo.png", width=120)
+    
+    st.markdown("### 🏆 Why Trust Shield?")
+    st.info("✅ **Legal Logic:** Based on Indian Contract Act, 1872.")
+    st.info("✅ **MSME 3x Interest:** Section 16 Enforceable Clause.")
+    st.info("✅ **Zero Data:** We don't store your clients' names.")
 
-# -------- HERO ----------
-hero_col, _ = st.columns([3, 1])
-with hero_col:
-    st.markdown('<div class="hero-title">Stop chasing payments. Protect your work.</div>', unsafe_allow_html=True)
-    st.markdown('<div class="hero-sub">Generate enforceable freelance contracts in minutes — live preview & single-file app.</div>', unsafe_allow_html=True)
+    st.markdown("---")
+    st.markdown("### ⭐ Testimonials")
+    st.caption('*\"Finally a contract that scares bad clients!\"* \n**- Rahul, Graphic Designer**')
+    st.caption('*\"Saved me ₹20k in late fees.\"* \n**- Anjali, Content Writer**')
+
+    st.markdown("---")
+    st.markdown("### 🆘 Need Custom Help?")
+    st.write("Is your project complex? Don't risk it.")
+    st.link_button("Hire Me for Review (₹499)", "https://wa.me/YOUR_NUMBER_HERE")
+
+# --- 5. MAIN HERO SECTION ---
+col_hero, col_img = st.columns([2, 1])
+
+with col_hero:
+    st.markdown("# Stop Chasing Payments.")
+    st.markdown('<p class="sub-hero">Generate watertight, MSME-protected contracts for Indian Freelancers in 30 seconds. Free forever.</p>', unsafe_allow_html=True)
+
+    # Trust Badges (Visuals)
+    st.markdown("""
+    <div style="display: flex; gap: 15px; margin-bottom: 20px;">
+        <span style="background: #1e293b; padding: 5px 10px; border-radius: 5px; color: #94a3b8; font-size: 0.9rem;">🏛️ MSME Protected</span>
+        <span style="background: #1e293b; padding: 5px 10px; border-radius: 5px; color: #94a3b8; font-size: 0.9rem;">👻 Anti-Ghosting</span>
+        <span style="background: #1e293b; padding: 5px 10px; border-radius: 5px; color: #94a3b8; font-size: 0.9rem;">🔒 IP Lock</span>
+    </div>
+    """, unsafe_allow_html=True)
+
+with col_img:
+    pass 
+
 st.markdown("---")
 
-# -------- MAIN: Left form | Right preview ----------
-left, right = st.columns([2, 3], gap="large")
+# --- 6. THE FORM (TABS LAYOUT) ---
+tab1, tab2, tab3 = st.tabs(["1️⃣ The Parties", "2️⃣ The Work (Scope)", "3️⃣ The Money"])
 
-with left:
-    st.markdown("### 1 — Fill details (guided)")
-    step_cols = st.columns([1,1,1,1])
-    labels = ["Parties", "Scope", "Money", "Generate"]
-    for i, c in enumerate(step_cols):
-        marker = "✅" if st.session_state.step > i+1 else f"{i+1}"
-        c.markdown(f"**{marker}**\n{labels[i]}")
+with tab1:
+    st.markdown("### 👤 Who is this contract for?")
+    c1, c2 = st.columns(2)
+    with c1:
+        freelancer_name = st.text_input("Provider Name (You)", "Amit Kumar")
+        
+        # --- SEARCHABLE CITY DROPDOWN ---
+        selected_city = st.selectbox("Your City (For Court Jurisdiction)", options=indian_cities, help="Type to search (e.g. 'Mum' for Mumbai).")
+        
+        if selected_city == "Other (Type Manually)":
+            jurisdiction_city = st.text_input("Type your City & State manually", "Mysuru, Karnataka")
+        else:
+            jurisdiction_city = selected_city
+            
+    with c2:
+        client_name = st.text_input("Client Name", "Tech Solutions Pvt Ltd")
+        gst_registered = st.checkbox("I am GST Registered")
 
-    if st.session_state.step == 1:
-        st.markdown("#### 👤 Parties")
-        c1, c2 = st.columns(2)
-        with c1:
-            freelancer_name = st.text_input("Your name (Provider)", value=st.session_state.get("freelancer_name", "Amit Kumar"))
-            jurisdiction_city = st.text_input("Your City (for Court Jurisdiction)", value=st.session_state.get("jurisdiction_city", "Bengaluru, Karnataka"))
-        with c2:
-            client_name = st.text_input("Client / Company name", value=st.session_state.get("client_name", "Tech Solutions Pvt Ltd"))
-            gst_registered = st.checkbox("I am GST Registered", value=st.session_state.get("gst_registered", False))
+with tab2:
+    st.markdown("### 🎯 What are you delivering?")
+    st.selectbox("✨ Start with a template:", list(scope_templates.keys()), key="template_selector", on_change=update_scope)
+    
+    scope_work = st.text_area(
+        "Scope of Work (Annexure A)", 
+        key="scope_text",
+        height=200,
+        help="Be specific. Vague contracts lead to unpaid work."
+    )
+    st.caption("💡 Tip: List 'Exclusions' to prevent Scope Creep.")
 
-        if st.button("Next: Define Scope"):
-            st.session_state.update({
-                "freelancer_name": freelancer_name,
-                "jurisdiction_city": jurisdiction_city,
-                "client_name": client_name,
-                "gst_registered": gst_registered,
-                "step": 2
-            })
-            # stop execution so Streamlit re-runs cleanly with updated state
-            st.stop()
+with tab3:
+    st.markdown("### 💰 Financial Terms")
+    c1, c2, c3 = st.columns(3)
+    with c1:
+        project_fee_num = st.number_input("Total Project Fee (INR)", value=50000, step=1000)
+    with c2:
+        hourly_rate_num = st.number_input("Overtime Rate (INR/hr)", value=2000, step=500)
+    with c3:
+        advance_percent = st.slider("Advance Required (%)", 0, 100, 50)
+    
+    st.info(f"ℹ️ **Calculation:** You will receive **Rs. {int(project_fee_num * (advance_percent/100)):,}** before starting work.")
 
-    elif st.session_state.step == 2:
-        st.markdown("#### 🎯 Scope of Work")
-        template = st.selectbox("Start with a template (optional)", options=list(st.session_state.scope_templates.keys()))
-        scope_default = st.session_state.scope_templates.get(template, "")
-        scope_text = st.text_area("Scope (Annexure A)", value=st.session_state.get("scope", scope_default), height=220)
-        st.caption("Tip: itemize deliverables and exclusions to avoid disputes.")
-        back, nxt = st.columns([1,1])
-        if back.button("Back"):
-            st.session_state.step = 1
-            st.stop()
-        if nxt.button("Next: Financials"):
-            st.session_state.scope = scope_text
-            st.session_state.step = 3
-            st.stop()
+st.markdown("---")
 
-    elif st.session_state.step == 3:
-        st.markdown("#### 💰 Financials")
-        c1, c2, c3 = st.columns(3)
-        with c1:
-            project_fee = st.number_input("Total Project Fee (INR)", value=int(st.session_state.get("project_fee", 50000)), step=1000, min_value=0)
-        with c2:
-            hourly_rate = st.number_input("Overtime Rate (INR/hr)", value=int(st.session_state.get("hourly_rate", 2000)), step=500, min_value=0)
-        with c3:
-            advance_percent = st.slider("Advance Required (%)", 0, 100, value=int(st.session_state.get("advance_percent", 50)))
+# --- 7. GENERATE SECTION ---
+center_col = st.columns([1, 2, 1])
+with center_col[1]:
+    generate_btn = st.button("🚀 Generate Legal Contract Now", type="primary")
 
-        st.info(f"You will receive Rs. {int(project_fee * (advance_percent / 100)):,} as advance.")
-        back, nxt = st.columns([1,1])
-        if back.button("Back"):
-            st.session_state.step = 2
-            st.stop()
-        if nxt.button("Next: Generate"):
-            st.session_state.update({"project_fee": project_fee, "hourly_rate": hourly_rate, "advance_percent": advance_percent})
-            st.session_state.step = 4
-            st.stop()
+# --- 8. LOGIC & OUTPUT ---
+if generate_btn:
+    
+    # DATA PREP
+    safe_cost = f"Rs. {project_fee_num:,}"
+    safe_rate = f"Rs. {hourly_rate_num:,}"
+    safe_scope = st.session_state.scope_text.replace("₹", "Rs. ")
+    gst_text = "(Exclusive of GST)" if gst_registered else ""
+    
+    # BUILD TEXT
+    full_contract_text = "PROFESSIONAL SERVICE AGREEMENT\n"
+    full_contract_text += f"Date: {datetime.date.today().strftime('%B %d, %Y')}\n\n"
+    full_contract_text += f"BETWEEN: {freelancer_name} (Provider) AND {client_name} (Client)\n"
+    full_contract_text += "-"*60 + "\n\n"
+    full_contract_text += f"1. PAYMENT: Total Fee {safe_cost} {gst_text}. Advance: {advance_percent}%. Late payments attract 3x MSME Interest.\n\n"
+    full_contract_text += f"2. JURISDICTION: Disputes subject to courts in {jurisdiction_city}.\n\n"
+    full_contract_text += "3. IP RIGHTS: Client owns IP only AFTER full payment.\n\n"
+    full_contract_text += "4. TERMINATION: 14 days of silence = Ghosting (Contract ends, you keep advance).\n\n"
+    
+    full_contract_text += "-"*60 + "\n"
+    full_contract_text += "IN WITNESS WHEREOF, the parties have executed this Agreement.\n\n"
+    full_contract_text += "SIGNED BY PROVIDER:\n"
+    full_contract_text += "_________________________\n"
+    full_contract_text += f"(Signature)\n{freelancer_name}\n\n"
+    full_contract_text += "SIGNED BY CLIENT:\n"
+    full_contract_text += "_________________________\n"
+    full_contract_text += f"(Signature)\n{client_name}\n"
 
-    elif st.session_state.step == 4:
-        st.markdown("#### ✅ Ready to generate")
-        st.write("Review the preview on the right. Generate PDF, email it, or prepare e-sign payload below.")
-        back, gen = st.columns([1,1])
-        if back.button("Back"):
-            st.session_state.step = 3
-            st.stop()
-        if gen.button("🚀 Generate PDF (creates file in memory)"):
-            values = {
-                "freelancer_name": st.session_state.get("freelancer_name", ""),
-                "client_name": st.session_state.get("client_name", ""),
-                "jurisdiction_city": st.session_state.get("jurisdiction_city", ""),
-                "project_fee": st.session_state.get("project_fee", 0),
-                "advance_percent": st.session_state.get("advance_percent", 0),
-                "hourly_rate": st.session_state.get("hourly_rate", 0),
-                "scope": st.session_state.get("scope", ""),
-                "gst_registered": st.session_state.get("gst_registered", False)
-            }
-            contract_text = build_contract(values)
-            try:
-                pdf_data = pdf_bytes(contract_text, values["scope"])
-            except Exception as e:
-                st.error("PDF generation failed: " + str(e))
-                pdf_data = None
-
-            if pdf_data:
-                st.session_state["last_pdf"] = pdf_data
-                st.success("PDF generated in memory. You can download, email, or prepare e-sign payload.")
-            else:
-                st.error("No PDF produced.")
-
-with right:
-    st.markdown("### Live preview & actions")
-    preview_values = {
-        "freelancer_name": st.session_state.get("freelancer_name", "Amit Kumar"),
-        "client_name": st.session_state.get("client_name", "Tech Solutions Pvt Ltd"),
-        "jurisdiction_city": st.session_state.get("jurisdiction_city", "Bengaluru, Karnataka"),
-        "project_fee": st.session_state.get("project_fee", 50000),
-        "advance_percent": st.session_state.get("advance_percent", 50),
-        "hourly_rate": st.session_state.get("hourly_rate", 2000),
-        "scope": st.session_state.get("scope", st.session_state.scope_templates.get("None", "")),
-        "gst_registered": st.session_state.get("gst_registered", False)
-    }
-    preview_text = build_contract(preview_values)
-    st.text_area("Preview (read-only)", value=preview_text, height=430, key="plain_preview")
-    st.markdown("---")
-
-    if st.session_state.get("last_pdf"):
-        st.success("✅ PDF in memory")
-        col1, col2 = st.columns([1,1])
-        with col1:
-            st.download_button("📥 Download PDF", st.session_state["last_pdf"], file_name="Freelance_Agreement.pdf", mime="application/pdf", use_container_width=True)
-        with col2:
-            with st.expander("✉️ Email this PDF to client"):
-                st.markdown("Enter SMTP credentials (used only for this send).")
-                smtp_host = st.text_input("SMTP Host", value="smtp.gmail.com")
-                smtp_port = st.number_input("SMTP Port", value=587)
-                smtp_user = st.text_input("SMTP Username (email)", value="")
-                smtp_pass = st.text_input("SMTP Password / App Password", type="password")
-                to_email = st.text_input("Recipient email", value="client@example.com")
-                subj = st.text_input("Email subject", value="Freelance Agreement")
-                body = st.text_area("Email body", value="Please find attached the agreement. Sign and return.", height=120)
-                if st.button("Send email now"):
-                    try:
-                        send_email_with_attachment(smtp_host, smtp_port, smtp_user, smtp_pass,
-                                                   to_email, subj, body,
-                                                   st.session_state["last_pdf"], "Freelance_Agreement.pdf")
-                        st.success("Email sent successfully.")
-                    except Exception as e:
-                        st.error("Email send failed: " + str(e))
-    else:
-        st.info("Generate a PDF first to enable download, email, and e-sign helpers.")
+    # PDF GENERATION
+    pdf = FPDF()
+    pdf.add_page()
+    
+    # Logo
+    if os.path.exists("logo.png"):
+        try:
+            pdf.image("logo.png", 10, 8, 25)
+            pdf.ln(20)
+        except:
+            pass
+    
+    pdf.set_font("Arial", size=10)
+    clean_text = full_contract_text.encode('latin-1', 'replace').decode('latin-1')
+    pdf.multi_cell(0, 6, clean_text)
+    
+    # Annexure Page
+    pdf.add_page()
+    pdf.set_font("Arial", 'B', size=12)
+    pdf.cell(0, 10, "ANNEXURE A: SCOPE OF WORK", ln=True)
+    pdf.ln(5)
+    pdf.set_font("Arial", size=10)
+    clean_scope = safe_scope.encode('latin-1', 'replace').decode('latin-1')
+    pdf.multi_cell(0, 6, clean_scope)
+    
+    pdf_output = pdf.output(dest='S').encode('latin-1')
+    
+    # SUCCESS PREVIEW
+    st.success("✅ Contract Generated Successfully! Review below.")
+    
+    # Preview Box
+    st.markdown("### 📄 Contract Preview")
+    st.text_area("Read before downloading:", value=full_contract_text, height=400)
+    
+    st.write("") # Vertical Spacer
+    
+    # Download Button Centered
+    col_dl_1, col_dl_2, col_dl_3 = st.columns([1, 2, 1])
+    with col_dl_2:
+        st.download_button(
+            label="📥 DOWNLOAD FINAL PDF CONTRACT",
+            data=pdf_output,
+            file_name="Freelance_Agreement.pdf",
+            mime="application/pdf",
+            use_container_width=True
+        )
