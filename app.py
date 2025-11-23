@@ -234,34 +234,42 @@ def create_professional_docx(full_text, annexure_text, provider_name, client_nam
     buffer.seek(0)
     return buffer
 
-# --- ENHANCED PDF WITH BETTER FORMATTING ---
-class EnhancedPDF(FPDF):
-    def header(self):
-        if self.page_no() == 1:
-            self.set_font('Arial', 'B', 16)
-            self.cell(0, 10, 'PROFESSIONAL SERVICE AGREEMENT', 0, 1, 'C')
-            self.ln(5)
+# --- SIMPLE PDF WITH NO ENCODING ISSUES ---
+def clean_text_for_pdf(text):
+    """Remove all characters that can't be encoded in latin-1"""
+    # Replace problematic characters
+    replacements = {
+        '₹': 'Rs. ',
+        '—': '-',
+        '–': '-',
+        '"': '"',
+        '"': '"',
+        ''': "'",
+        ''': "'",
+        '…': '...',
+        '•': '-',
+        '═': '=',
+        '→': '->',
+        '←': '<-',
+        '×': 'x',
+    }
     
-    def footer(self):
-        self.set_y(-15)
-        self.set_font('Arial', 'I', 8)
-        self.cell(0, 10, f'Page {self.page_no()}', 0, 0, 'C')
+    for old, new in replacements.items():
+        text = text.replace(old, new)
     
-    def chapter_title(self, title):
-        self.set_font('Arial', 'B', 12)
-        self.set_fill_color(230, 230, 230)
-        self.cell(0, 8, title, 0, 1, 'L', 1)
-        self.ln(2)
-    
-    def chapter_body(self, body):
-        self.set_font('Arial', '', 10)
-        self.multi_cell(0, 5, body)
-        self.ln()
+    # Remove any remaining non-latin-1 characters
+    try:
+        text.encode('latin-1')
+        return text
+    except UnicodeEncodeError:
+        # If still has issues, do aggressive cleaning
+        return ''.join(char if ord(char) < 256 else '?' for char in text)
 
 def create_professional_pdf(full_text, annexure_text, provider_name, client_name):
-    """Creates a professionally formatted PDF with proper encoding"""
-    pdf = EnhancedPDF()
+    """Creates a professionally formatted PDF with safe encoding"""
+    pdf = FPDF()
     pdf.add_page()
+    pdf.set_auto_page_break(auto=True, margin=15)
     
     # Add logo if exists
     if os.path.exists("logo.png"):
@@ -271,53 +279,79 @@ def create_professional_pdf(full_text, annexure_text, provider_name, client_name
         except:
             pdf.ln(5)
     
+    # Title
+    pdf.set_font('Arial', 'B', 16)
+    pdf.cell(0, 10, 'PROFESSIONAL SERVICE AGREEMENT', 0, 1, 'C')
+    pdf.ln(5)
+    
     # Date
     pdf.set_font('Arial', '', 11)
     pdf.cell(0, 8, f"Date: {datetime.date.today().strftime('%B %d, %Y')}", 0, 1, 'C')
     pdf.ln(5)
     
+    # Clean the text
+    clean_full_text = clean_text_for_pdf(full_text)
+    clean_annexure = clean_text_for_pdf(annexure_text)
+    clean_provider = clean_text_for_pdf(provider_name)
+    clean_client = clean_text_for_pdf(client_name)
+    
     # Parse and format content
-    lines = full_text.split('\n')
+    lines = clean_full_text.split('\n')
     for line in lines:
         line = line.strip()
         if not line:
             continue
         
-        # Replace special characters for PDF compatibility
-        line = line.replace('₹', 'Rs. ').replace('—', '-').replace('"', '"').replace('"', '"')
-        
-        # Section headers
-        if line and line[0].isdigit() and '.' in line[:3]:
-            pdf.chapter_title(line)
+        # Section headers (numbered lines)
+        if line and len(line) > 2 and line[0].isdigit() and '.' in line[:3]:
+            pdf.set_font('Arial', 'B', 12)
+            pdf.set_fill_color(240, 240, 240)
+            pdf.cell(0, 8, line[:80], 0, 1, 'L', 1)  # Limit length to prevent overflow
+            pdf.ln(2)
         # Signature lines
-        elif 'SIGNED BY' in line:
-            pdf.ln(5)
+        elif 'SIGNED BY' in line or 'SIGNATURE' in line.upper():
+            pdf.ln(3)
             pdf.set_font('Arial', 'B', 11)
-            pdf.cell(0, 8, line, 0, 1)
+            pdf.cell(0, 6, line[:150], 0, 1)
+        # Separator lines
+        elif line.startswith('===') or line.startswith('---'):
+            pdf.ln(2)
+        # Regular content
         else:
             pdf.set_font('Arial', '', 10)
-            pdf.multi_cell(0, 5, line)
+            # Split long lines to prevent overflow
+            if len(line) > 90:
+                pdf.multi_cell(0, 5, line)
+            else:
+                pdf.cell(0, 5, line, 0, 1)
     
-    # ANNEXURE
+    # ANNEXURE - New page
     pdf.add_page()
-    pdf.chapter_title('ANNEXURE A: SCOPE OF WORK')
+    pdf.set_font('Arial', 'B', 14)
+    pdf.cell(0, 10, 'ANNEXURE A: SCOPE OF WORK', 0, 1, 'L')
+    pdf.ln(5)
     
-    # Clean and format scope
-    clean_scope = annexure_text.replace('₹', 'Rs. ').replace('—', '-')
-    pdf.chapter_body(clean_scope)
+    # Format annexure
+    pdf.set_font('Arial', '', 10)
+    pdf.multi_cell(0, 5, clean_annexure)
     
     # Signature section
     pdf.ln(10)
     pdf.set_font('Arial', '', 10)
-    pdf.cell(0, 6, '_' * 90, 0, 1)
+    pdf.cell(0, 6, '_________________________________________________________________', 0, 1)
     pdf.ln(5)
-    pdf.cell(0, 6, f'Provider Signature: _____________________ Date: __________', 0, 1)
-    pdf.cell(0, 6, f'Name: {provider_name}', 0, 1)
+    pdf.cell(0, 6, 'Provider Signature: ________________________  Date: __________', 0, 1)
+    pdf.cell(0, 6, f'Name: {clean_provider}', 0, 1)
     pdf.ln(5)
-    pdf.cell(0, 6, f'Client Signature: _____________________ Date: __________', 0, 1)
-    pdf.cell(0, 6, f'Name: {client_name}', 0, 1)
+    pdf.cell(0, 6, 'Client Signature: ________________________  Date: __________', 0, 1)
+    pdf.cell(0, 6, f'Name: {clean_client}', 0, 1)
     
-    return pdf.output(dest='S')
+    # Footer on last page
+    pdf.ln(10)
+    pdf.set_font('Arial', 'I', 8)
+    pdf.cell(0, 5, 'Generated by Freelance Shield Pro - Protecting Indian Freelancers', 0, 1, 'C')
+    
+    return pdf.output(dest='S').encode('latin-1', errors='replace')
 
 # --- TEMPLATES ---
 scope_templates = {
@@ -624,7 +658,7 @@ if generate_btn:
     # Get smart clauses
     smart = get_smart_clauses(template_choice, safe_rate)
     
-    # Build contract text with enhanced formatting
+    # Build contract text with enhanced formatting (NO SPECIAL CHARACTERS)
     full_text = f"""PROFESSIONAL SERVICE AGREEMENT
 
 Date: {datetime.date.today().strftime('%B %d, %Y')}
@@ -634,7 +668,7 @@ AND: {client_name} ("Client")
 
 This Agreement governs the professional services to be provided by the Provider to the Client as detailed in Annexure A.
 
-═══════════════════════════════════════════════════════════════
+===============================================================
 
 1. PAYMENT TERMS & LATE PAYMENT INTEREST (MSME ACT COMPLIANCE)
 
@@ -646,7 +680,7 @@ CRITICAL PAYMENT PROTECTION: As per Section 16 of the Micro, Small and Medium En
 
 Payment must be made via bank transfer, UPI, or other traceable methods. Cash payments are not accepted.
 
-═══════════════════════════════════════════════════════════════
+===============================================================
 
 2. ACCEPTANCE & REVISIONS
 
@@ -654,7 +688,7 @@ Payment must be made via bank transfer, UPI, or other traceable methods. Cash pa
 
 Revisions must be requested in writing (email/WhatsApp) with specific, actionable feedback. Vague feedback such as "make it better" or "I don't like it" without concrete direction will not be considered valid revision requests.
 
-═══════════════════════════════════════════════════════════════
+===============================================================
 
 3. INTELLECTUAL PROPERTY RIGHTS (IP LOCK)
 
@@ -662,13 +696,13 @@ Revisions must be requested in writing (email/WhatsApp) with specific, actionabl
 
 CRITICAL: Until full and final payment is received, all work product, drafts, source files, and deliverables remain the exclusive property of the Provider. Any use, publication, or distribution of work before payment completion constitutes Copyright Infringement under the Copyright Act, 1957, and Provider reserves the right to pursue legal remedies.
 
-═══════════════════════════════════════════════════════════════
+===============================================================
 
 4. WARRANTY & SUPPORT
 
 {smart['warranty']}
 
-═══════════════════════════════════════════════════════════════
+===============================================================
 
 5. CONFIDENTIALITY (NON-DISCLOSURE AGREEMENT)
 
@@ -678,7 +712,7 @@ This obligation survives for TWO (2) YEARS after termination of this Agreement.
 
 Exceptions: Does not apply to information that is (a) publicly available, (b) already known to the receiving party, or (c) required to be disclosed by law.
 
-═══════════════════════════════════════════════════════════════
+===============================================================
 
 6. COMMUNICATION POLICY & ANTI-GHOSTING CLAUSE
 
@@ -688,19 +722,19 @@ Client Responsiveness: Client agrees to provide timely feedback, approvals, and 
 
 ANTI-GHOSTING PROTECTION: If Client fails to respond to Provider communications for FOURTEEN (14) consecutive days without prior notice, the project will be deemed TERMINATED. All payments made are NON-REFUNDABLE. Provider reserves the right to charge a standby fee of Rs. {int(hourly_rate_num * 8):,} per day for extended delays caused by Client unavailability.
 
-═══════════════════════════════════════════════════════════════
+===============================================================
 
 7. CANCELLATION & KILL FEE
 
 {smart['cancellation']}
 
-═══════════════════════════════════════════════════════════════
+===============================================================
 
 8. TERMINATION BY PROVIDER
 
 {smart.get('termination', 'Provider may terminate with 7 days written notice if Client breaches payment terms. Client owes payment for work completed till termination date.')}
 
-═══════════════════════════════════════════════════════════════
+===============================================================
 
 9. FORCE MAJEURE
 
@@ -712,13 +746,13 @@ Neither party shall be held liable for failure or delay in performance due to ci
 
 Upon occurrence of such events, the affected party must notify the other within 48 hours.
 
-═══════════════════════════════════════════════════════════════
+===============================================================
 
 10. LIMITATION OF LIABILITY
 
 Provider's total liability under this Agreement is strictly limited to the Total Fee paid by Client. Provider shall NOT be liable for any indirect, incidental, consequential, or punitive damages including lost profits, business interruption, or data loss.
 
-═══════════════════════════════════════════════════════════════
+===============================================================
 
 11. DISPUTE RESOLUTION & JURISDICTION
 
@@ -732,7 +766,7 @@ Single Arbitrator: Mutually appointed by both parties
 
 The prevailing party in arbitration shall be entitled to recover reasonable legal costs and arbitration fees.
 
-═══════════════════════════════════════════════════════════════
+===============================================================
 
 12. GST COMPLIANCE
 
@@ -740,19 +774,19 @@ All fees quoted are EXCLUSIVE of Goods and Services Tax (GST). Current applicabl
 
 Client Responsibility: Client is responsible for providing valid GSTIN details if claiming Input Tax Credit. Any penalties arising from incorrect GST information provided by Client shall be Client's responsibility.
 
-═══════════════════════════════════════════════════════════════
+===============================================================
 
 13. STAMP DUTY COMPLIANCE
 
 NOTE: This agreement may require stamp duty payment as per the Indian Stamp Act, 1899. Stamp duty rates vary by state. Client is responsible for ensuring stamp duty compliance in their state of residence.
 
-═══════════════════════════════════════════════════════════════
+===============================================================
 
 14. ENTIRE AGREEMENT
 
 This Agreement (including Annexure A) constitutes the entire understanding between the parties and supersedes all prior discussions, agreements, or understandings. Any modifications must be made in writing and signed by both parties.
 
-═══════════════════════════════════════════════════════════════
+===============================================================
 
 SIGNATURES
 
@@ -811,7 +845,8 @@ Date: _____________________
         
         # Preview
         with st.expander("👀 Preview Full Contract (Click to Expand)"):
-            st.text_area("", value=full_text + "\n\n" + "═"*60 + "\nANNEXURE A: SCOPE OF WORK\n" + "═"*60 + "\n\n" + safe_scope, height=400, disabled=True)
+            preview_text = full_text + "\n\n" + "="*60 + "\nANNEXURE A: SCOPE OF WORK\n" + "="*60 + "\n\n" + safe_scope
+            st.text_area("", value=preview_text, height=400, disabled=True)
         
         # Share options
         st.markdown("### 📤 Share with Client")
