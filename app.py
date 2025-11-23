@@ -17,7 +17,7 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# --- 2. CUSTOM CSS ---
+# --- 2. CUSTOM CSS (FIXED BUTTON JUMP) ---
 st.markdown(
     """
     <style>
@@ -42,14 +42,14 @@ st.markdown(
         }
         h2, h3 { color: #f8f9fa !important; font-family: 'Inter', sans-serif; }
         
-        /* TEXT VISIBILITY */
+        /* TEXT VISIBILITY FIX */
         .stMarkdown p, .stMarkdown li, label {
             color: #e0e0e0 !important;
             font-size: 1.05rem;
             line-height: 1.6;
         }
 
-        /* CARDS */
+        /* CARDS (Hover Effect) */
         .stInfo {
             background-color: rgba(30, 41, 59, 0.6);
             border: 1px solid #334155;
@@ -73,25 +73,45 @@ st.markdown(
         .stTextArea textarea {
             font-family: 'Courier New', monospace !important;
             background-color: #0f172a !important;
-            color: #93c5fd !important;
+            color: #93c5fd !important; /* Light Blue Text */
             border: 1px solid #3b82f6 !important;
         }
 
-        /* BUTTONS */
+        /* --- BUTTON STYLING (FIXED JUMPING) --- */
+        
+        /* 1. Base Style (Applies to BOTH Enabled and Disabled) */
         .stButton>button {
-            background: linear-gradient(90deg, #2563eb, #00d2ff);
-            color: white;
-            font-weight: bold;
-            border: none;
-            padding: 0.8rem 1.5rem;
-            border-radius: 8px;
             width: 100%;
+            border-radius: 8px;
+            height: 3rem !important; /* FIXED HEIGHT to prevent resizing */
+            font-weight: 800;
             text-transform: uppercase;
             letter-spacing: 1px;
-            box-shadow: 0 4px 15px rgba(0, 210, 255, 0.3);
-            transition: all 0.3s;
+            border: none;
+            transition: all 0.3s ease;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
-        .stButton>button:hover {
+
+        /* 2. Disabled State (When Checkbox is OFF) */
+        .stButton>button:disabled {
+            background-color: rgba(30, 41, 59, 0.5) !important;
+            color: #64748b !important;
+            border: 1px solid #475569 !important;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        /* 3. Enabled State (When Checkbox is ON) */
+        .stButton>button:not(:disabled) {
+            background: linear-gradient(90deg, #2563eb, #00d2ff);
+            color: white;
+            box-shadow: 0 4px 15px rgba(0, 210, 255, 0.3);
+        }
+
+        /* 4. Hover State (Only for Enabled) */
+        .stButton>button:not(:disabled):hover {
             transform: translateY(-2px);
             box-shadow: 0 6px 20px rgba(0, 210, 255, 0.5);
         }
@@ -143,7 +163,7 @@ if 'slider_key' not in st.session_state: st.session_state.slider_key = 50
 if 'num_key' not in st.session_state: st.session_state.num_key = 50
 if 'scope_text' not in st.session_state: st.session_state.scope_text = ""
 
-# --- DOCX GENERATOR ---
+# --- DOCX GENERATOR FUNCTION ---
 def create_docx(full_text, annexure_text):
     doc = Document()
     doc.add_heading('PROFESSIONAL SERVICE AGREEMENT', 0)
@@ -156,21 +176,80 @@ def create_docx(full_text, annexure_text):
     buffer.seek(0)
     return buffer
 
-# --- FULL TEMPLATE LIBRARY ---
+# --- FULL TEMPLATE LIBRARY (12 CATEGORIES) ---
 scope_templates = {
     "Select a template...": "",
-    "✍️ Content Writing": """DELIVERABLE: 4 SEO Blog Articles (1000 words each)\n- FORMAT: .docx, Grammarly score >90\n- TOPICS: Approved by Client in advance\n- DELIVERY: 2 articles/week via email\n- REVISIONS: 1 round included per article\n- EXCLUSIONS: No image sourcing, keyword research, or posting""",
-    "🎨 Graphic Design": """DELIVERABLE: Logo (PNG/SVG), Business Card (PDF), Banner\n- BRIEF: Colors/Fonts provided by Client\n- REVISIONS: 3 feedback rounds included (within 2 days)\n- DELIVERY: Final files via Google Drive in 7 days\n- EXCLUSIONS: No printing costs or stock image purchase""",
-    "🖼️ UI/UX & Web Design": """DELIVERABLE: Wireframe + UI Kit (5 Screens)\n- FORMAT: Figma/Sketch/XD files\n- TIMELINE: Initial draft in 5 days\n- REVISIONS: 2 rounds included\n- EXCLUSIONS: No coding/development included""",
-    "💻 Web Development": """DELIVERABLE: 5-Page WordPress Site\n- SPECS: Speed score >80, Contact Form, About Page\n- DELIVERY: Staging link for review, ZIP files after payment\n- REVISIONS: 2 rounds included\n- EXCLUSIONS: Domain/Hosting fees and content writing not included""",
-    "📱 App Development": """DELIVERABLE: Android App MVP (5 Core Features)\n- SPECS: Compiles on Android 11+, Source Code included\n- TIMELINE: Weekly sprints, 30-day bug fix warranty\n- EXCLUSIONS: Google Play Store upload fees not included""",
-    "🎥 Video Editing": """DELIVERABLE: Edit 2 YouTube Videos (max 8 mins)\n- FORMAT: MP4, 1080p, Color Graded\n- TIMELINE: Draft within 48 hours of receiving raw files\n- REVISIONS: 2 feedback rounds included\n- EXCLUSIONS: No captions, thumbnails, or stock footage""",
-    "📱 Social Media Marketing": """DELIVERABLE: 12 Static Posts + 4 Reels (Monthly)\n- FORMAT: PNG (1080px) and MP4 (<60s)\n- SCHEDULE: 3 posts/week, approved by 25th of prev month\n- REVISIONS: 2 rounds per month included\n- EXCLUSIONS: No paid ad management or community replies""",
-    "📈 SEO & Digital Marketing": """DELIVERABLE: SEO Audit (20 pages) + Keyword Plan\n- FORMAT: PDF Report, Excel Sheet\n- SPECS: 30 priority keywords, competitor analysis\n- REVISIONS: 1 round included\n- EXCLUSIONS: On-page implementation and backlinks not included""",
-    "📧 Virtual Assistance": """DELIVERABLE: Daily Admin Tasks (Email/Calendar)\n- REPORTING: Daily Excel report, Inbox cleared\n- AVAILABILITY: Mon-Fri, 9am-5pm\n- EXCLUSIONS: No calls, travel booking, or personal errands""",
-    "📸 Photography": """DELIVERABLE: 50 Product Shots (Edited)\n- FORMAT: High-res JPEGs, 3000px, White Background\n- TIMELINE: Edits delivered in 3 days\n- REVISIONS: 1 re-edit round per batch of 10\n- EXCLUSIONS: No props, prints, or location booking fees""",
-    "🗣️ Translation": """DELIVERABLE: Translate 10k words (Eng-Hindi) + 2 Transcripts\n- FORMAT: Word/TXT files\n- ACCURACY: >98% standard\n- REVISIONS: 1 review round included\n- EXCLUSIONS: No subtitling or legal localization""",
-    "🎙️ Voice-Over": """DELIVERABLE: 3 Commercial Voice-overs (30s) + 1 Podcast Edit\n- FORMAT: WAV/MP3, Commercial rights included\n- SCRIPT: Supplied by Client\n- REVISIONS: 1 correction round included\n- EXCLUSIONS: No music production or mixing"""
+    
+    "✍️ Content Writing": """DELIVERABLE: 4 SEO Blog Articles (1000 words each)
+- FORMAT: .docx, Grammarly score >90
+- TOPICS: Approved by Client in advance
+- DELIVERY: 2 articles/week via email
+- REVISIONS: 1 round included per article
+- EXCLUSIONS: No image sourcing, keyword research, or posting""",
+
+    "🎨 Graphic Design": """DELIVERABLE: Logo (PNG/SVG), Business Card (PDF), Banner
+- BRIEF: Colors/Fonts provided by Client
+- REVISIONS: 3 feedback rounds included (within 2 days)
+- DELIVERY: Final files via Google Drive in 7 days
+- EXCLUSIONS: No printing costs or stock image purchase""",
+
+    "🖼️ UI/UX & Web Design": """DELIVERABLE: Wireframe + UI Kit (5 Screens)
+- FORMAT: Figma/Sketch/XD files
+- TIMELINE: Initial draft in 5 days
+- REVISIONS: 2 rounds included
+- EXCLUSIONS: No coding/development included""",
+
+    "💻 Web Development": """DELIVERABLE: 5-Page Responsive Website (WordPress)
+- SPECS: Speed score >80, Contact Form, About Page
+- DELIVERY: Staging link for review, ZIP files after payment
+- REVISIONS: 2 rounds included
+- EXCLUSIONS: Domain/Hosting fees and content writing not included""",
+
+    "📱 App Development": """DELIVERABLE: Android App MVP (5 Core Features)
+- SPECS: Compiles on Android 11+, Source Code included
+- TIMELINE: Weekly sprints, 30-day bug fix warranty
+- EXCLUSIONS: Google Play Store upload fees not included""",
+
+    "🎥 Video Editing": """DELIVERABLE: Edit 2 YouTube Videos (max 8 mins)
+- FORMAT: MP4, 1080p, Color Graded
+- TIMELINE: Draft within 48 hours of receiving raw files
+- REVISIONS: 2 feedback rounds included
+- EXCLUSIONS: No captions, thumbnails, or stock footage""",
+
+    "📱 Social Media Marketing": """DELIVERABLE: 12 Static Posts + 4 Reels (Monthly)
+- FORMAT: PNG (1080px) and MP4 (<60s)
+- SCHEDULE: 3 posts/week, approved by 25th of prev month
+- REVISIONS: 2 rounds per month included
+- EXCLUSIONS: No paid ad management or community replies""",
+
+    "📈 SEO & Digital Marketing": """DELIVERABLE: SEO Audit (20 pages) + Keyword Plan
+- FORMAT: PDF Report, Excel Sheet
+- SPECS: 30 priority keywords, competitor analysis
+- REVISIONS: 1 round included
+- EXCLUSIONS: On-page implementation and backlinks not included""",
+
+    "📧 Virtual Assistance": """DELIVERABLE: Daily Admin Tasks (Email/Calendar)
+- REPORTING: Daily Excel report, Inbox cleared
+- AVAILABILITY: Mon-Fri, 9am-5pm
+- EXCLUSIONS: No calls, travel booking, or personal errands""",
+
+    "📸 Photography": """DELIVERABLE: 50 Product Shots (Edited)
+- FORMAT: High-res JPEGs, 3000px, White Background
+- TIMELINE: Edits delivered in 3 days
+- REVISIONS: 1 re-edit round per batch of 10
+- EXCLUSIONS: No props, prints, or location booking fees""",
+
+    "🗣️ Translation": """DELIVERABLE: Translate 10k words (Eng-Hindi) + 2 Transcripts
+- FORMAT: Word/TXT files
+- ACCURACY: >98% standard
+- REVISIONS: 1 review round included
+- EXCLUSIONS: No subtitling or legal localization""",
+
+    "🎙️ Voice-Over": """DELIVERABLE: 3 Commercial Voice-overs (30s) + 1 Podcast Edit
+- FORMAT: WAV/MP3, Commercial rights included
+- SCRIPT: Supplied by Client
+- REVISIONS: 1 correction round included
+- EXCLUSIONS: No music production or mixing"""
 }
 
 def update_scope():
@@ -207,7 +286,7 @@ def get_smart_clauses(category, rate):
         clauses["cancellation"] = "KILL FEE: Cancellation after start incurs 50% fee. Cancellation after draft delivery incurs 100% fee."
     return clauses
 
-# --- 4. SIDEBAR (WITH ACCURATE LEGAL TEXT) ---
+# --- 4. SIDEBAR (WITH LEGAL LINKS) ---
 with st.sidebar:
     if os.path.exists("logo.png"): st.image("logo.png", width=120)
     
@@ -296,13 +375,14 @@ with tab3:
 
 st.markdown("---")
 
-# --- CONSENT & FOOTER ---
+# --- CONSENT CHECKBOX (REQUIRED) ---
 check_terms = st.checkbox("I agree to the Terms of Use & Privacy Policy. I understand this is a tool, not legal advice.")
 
 c_main = st.columns([1, 2, 1])
 with c_main[1]: 
+    # DISABLE BUTTON LOGIC
     if check_terms:
-        generate_btn = st.button("🚀 Generate Legal Contract Now", type="primary")
+        generate_btn = st.button("🚀 Generate Legal Contract Now", type="primary", disabled=False)
     else:
         st.button("🚀 Generate Legal Contract Now", disabled=True, help="Please accept the Terms to proceed.")
         generate_btn = False
