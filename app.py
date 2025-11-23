@@ -17,115 +17,122 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# --- 2. CUSTOM CSS (FINAL POLISH) ---
+# --- 2. CUSTOM CSS (ACCESSIBILITY & UX UPGRADE) ---
 st.markdown(
     """
     <style>
         /* BACKGROUND */
         .stApp {
-            background-image: linear-gradient(rgba(10, 10, 20, 0.85), rgba(10, 10, 20, 0.90)), 
+            background-image: linear-gradient(rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.95)), 
             url("https://raw.githubusercontent.com/mamamooze/freelance-shield/main/background.png");
             background-size: cover;
             background-attachment: fixed;
         }
 
-        /* HERO TITLE GRADIENT */
+        /* ACCESSIBILITY: TYPOGRAPHY */
+        html, body, [class*="css"] {
+            font-family: 'Inter', sans-serif;
+            font-size: 18px; /* Larger font for readability */
+        }
+        
         h1 {
-            background: -webkit-linear-gradient(45deg, #ffffff, #00d2ff);
+            background: -webkit-linear-gradient(45deg, #ffffff, #0ea5e9); /* High contrast Blue */
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            font-family: 'Inter', sans-serif;
             font-weight: 900;
             font-size: 3.5rem;
             letter-spacing: -1px;
-            text-shadow: 0 2px 10px rgba(0,210,255,0.3);
+            padding-bottom: 10px;
         }
-        h2, h3 { color: #f8f9fa !important; font-family: 'Inter', sans-serif; }
+        h2, h3 { color: #f8fafc !important; font-weight: 700; }
         
-        /* TEXT VISIBILITY FIX */
-        .stMarkdown p, .stMarkdown li, label {
-            color: #e0e0e0 !important;
-            font-size: 1.05rem;
+        /* TEXT CONTRAST FIX */
+        .stMarkdown p, .stMarkdown li, label, .stCaption {
+            color: #e2e8f0 !important; /* High contrast grey-white */
             line-height: 1.6;
         }
 
-        /* CARDS (Hover Effect) */
+        /* MICRO-INTERACTIONS: CARDS */
         .stInfo {
-            background-color: rgba(30, 41, 59, 0.6);
-            border: 1px solid #334155;
-            transition: transform 0.2s ease, border-color 0.2s;
+            background-color: rgba(30, 41, 59, 0.8);
+            border: 1px solid #475569;
+            border-radius: 12px;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
         }
         .stInfo:hover {
-            transform: translateY(-3px);
-            border-color: #00d2ff;
-            box-shadow: 0 4px 15px rgba(0, 210, 255, 0.1);
+            transform: translateY(-5px) scale(1.01);
+            border-color: #0ea5e9;
+            box-shadow: 0 10px 25px rgba(14, 165, 233, 0.25);
         }
 
-        /* INPUT FIELDS */
+        /* MOBILE FRIENDLY INPUTS (Large Touch Targets) */
         .stTextInput input, .stNumberInput input, .stTextArea textarea, .stSelectbox div[data-baseweb="select"] {
             background-color: #1e293b !important;
             color: #ffffff !important;
-            border: 1px solid #475569 !important;
+            border: 1px solid #64748b !important;
             border-radius: 8px;
+            min-height: 45px; /* Tappable on mobile */
         }
-        
-        /* PREVIEW BOX */
-        .stTextArea textarea {
-            font-family: 'Courier New', monospace !important;
-            background-color: #0f172a !important;
-            color: #93c5fd !important; /* Light Blue Text */
-            border: 1px solid #3b82f6 !important;
+        .stTextInput input:focus, .stTextArea textarea:focus {
+            border-color: #0ea5e9 !important;
+            box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.3) !important;
         }
 
-        /* BUTTONS (Neon Glow) */
+        /* BUTTONS (Interactive & Accessible) */
         .stButton>button {
-            background: linear-gradient(90deg, #2563eb, #00d2ff);
+            background: linear-gradient(90deg, #0284c7, #0ea5e9); /* Solid Blue Gradient */
             color: white;
-            font-weight: bold;
+            font-weight: 800;
             border: none;
-            padding: 0.8rem 1.5rem;
-            border-radius: 8px;
+            padding: 1rem 2rem;
+            border-radius: 10px;
             width: 100%;
             text-transform: uppercase;
             letter-spacing: 1px;
-            box-shadow: 0 4px 15px rgba(0, 210, 255, 0.3);
-            transition: all 0.3s;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: all 0.2s ease;
         }
         .stButton>button:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0, 210, 255, 0.5);
+            box-shadow: 0 10px 15px rgba(14, 165, 233, 0.4);
+            background: linear-gradient(90deg, #0369a1, #0284c7);
+        }
+        .stButton>button:active {
+            transform: scale(0.98);
         }
 
-        /* SIDEBAR */
-        [data-testid="stSidebar"] { background-color: #0f172a; border-right: 1px solid #1e293b; }
-        [data-testid="stSidebar"] h1, [data-testid="stSidebar"] h2, [data-testid="stSidebar"] p { color: #cbd5e1 !important; }
+        /* SIDEBAR VISIBILITY */
+        [data-testid="stSidebar"] { background-color: #0f172a; border-right: 1px solid #334155; }
+        [data-testid="stSidebar"] h1, [data-testid="stSidebar"] h2, [data-testid="stSidebar"] p { color: #f1f5f9 !important; }
         
-        /* PILL TABS */
-        .stTabs [data-baseweb="tab-list"] {
-            gap: 10px;
-            background-color: rgba(30, 41, 59, 0.5);
-            padding: 10px;
-            border-radius: 30px;
-            border: 1px solid #334155;
+        /* PROGRESS STEPPER VISUAL */
+        .step-container {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            background: rgba(255,255,255,0.05);
+            padding: 15px;
+            border-radius: 50px;
         }
-        .stTabs [data-baseweb="tab"] {
-            height: auto !important;
-            padding: 8px 20px;
-            background-color: transparent;
-            border-radius: 20px;
-            color: #cbd5e1;
-            border: none;
-            font-weight: 600;
+        .step {
+            color: #94a3b8;
+            font-weight: bold;
+            font-size: 0.9rem;
         }
-        .stTabs [aria-selected="true"] {
-            background-color: #3b82f6;
-            color: white !important;
-            box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3);
+        .step.active {
+            color: #38bdf8; /* Cyan for active */
+            text-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
         }
         
         /* WARNING BOX */
         .warning-box {
-            background-color: rgba(255, 193, 7, 0.15); border-left: 4px solid #ffc107; padding: 10px; margin-bottom: 10px; border-radius: 4px; color: #ffecb3; font-size: 0.9rem;
+            background-color: rgba(234, 179, 8, 0.1); 
+            border-left: 4px solid #eab308; 
+            padding: 15px; 
+            margin-bottom: 15px; 
+            border-radius: 4px; 
+            color: #fde047; 
+            font-weight: 500;
         }
     </style>
     """,
@@ -138,7 +145,7 @@ if 'slider_key' not in st.session_state: st.session_state.slider_key = 50
 if 'num_key' not in st.session_state: st.session_state.num_key = 50
 if 'scope_text' not in st.session_state: st.session_state.scope_text = ""
 
-# --- DOCX GENERATOR FUNCTION ---
+# --- DOCX GENERATOR ---
 def create_docx(full_text, annexure_text):
     doc = Document()
     doc.add_heading('PROFESSIONAL SERVICE AGREEMENT', 0)
@@ -154,77 +161,18 @@ def create_docx(full_text, annexure_text):
 # --- FULL TEMPLATE LIBRARY (WITH ICONS) ---
 scope_templates = {
     "Select a template...": "",
-    
-    "✍️ Content Writing": """DELIVERABLE: 4 SEO Blog Articles (1000 words each)
-- FORMAT: .docx, Grammarly score >90
-- TOPICS: Approved by Client in advance
-- DELIVERY: 2 articles/week via email
-- REVISIONS: 1 round included per article
-- EXCLUSIONS: No image sourcing, keyword research, or posting""",
-
-    "🎨 Graphic Design": """DELIVERABLE: Logo (PNG/SVG), Business Card (PDF), Banner
-- BRIEF: Colors/Fonts provided by Client
-- REVISIONS: 3 feedback rounds included (within 2 days)
-- DELIVERY: Final files via Google Drive in 7 days
-- EXCLUSIONS: No printing costs or stock image purchase""",
-
-    "🖼️ UI/UX & Web Design": """DELIVERABLE: Wireframe + UI Kit (5 Screens)
-- FORMAT: Figma/Sketch/XD files
-- TIMELINE: Initial draft in 5 days
-- REVISIONS: 2 rounds included
-- EXCLUSIONS: No coding/development included""",
-
-    "💻 Web Development": """DELIVERABLE: 5-Page Responsive Website (WordPress)
-- SPECS: Speed score >80, Contact Form, About Page
-- DELIVERY: Staging link for review, ZIP files after payment
-- REVISIONS: 2 rounds included
-- EXCLUSIONS: Domain/Hosting fees and content writing not included""",
-
-    "📱 App Development": """DELIVERABLE: Android App MVP (5 Core Features)
-- SPECS: Compiles on Android 11+, Source Code included
-- TIMELINE: Weekly sprints, 30-day bug fix warranty
-- EXCLUSIONS: Google Play Store upload fees not included""",
-
-    "🎥 Video Editing": """DELIVERABLE: Edit 2 YouTube Videos (max 8 mins)
-- FORMAT: MP4, 1080p, Color Graded
-- TIMELINE: Draft within 48 hours of receiving raw files
-- REVISIONS: 2 feedback rounds included
-- EXCLUSIONS: No captions, thumbnails, or stock footage""",
-
-    "📱 Social Media Marketing": """DELIVERABLE: 12 Static Posts + 4 Reels (Monthly)
-- FORMAT: PNG (1080px) and MP4 (<60s)
-- SCHEDULE: 3 posts/week, approved by 25th of prev month
-- REVISIONS: 2 rounds per month included
-- EXCLUSIONS: No paid ad management or community replies""",
-
-    "📈 SEO & Digital Marketing": """DELIVERABLE: SEO Audit (20 pages) + Keyword Plan
-- FORMAT: PDF Report, Excel Sheet
-- SPECS: 30 priority keywords, competitor analysis
-- REVISIONS: 1 round included
-- EXCLUSIONS: On-page implementation and backlinks not included""",
-
-    "📧 Virtual Assistance": """DELIVERABLE: Daily Admin Tasks (Email/Calendar)
-- REPORTING: Daily Excel report, Inbox cleared
-- AVAILABILITY: Mon-Fri, 9am-5pm
-- EXCLUSIONS: No calls, travel booking, or personal errands""",
-
-    "📸 Photography": """DELIVERABLE: 50 Product Shots (Edited)
-- FORMAT: High-res JPEGs, 3000px, White Background
-- TIMELINE: Edits delivered in 3 days
-- REVISIONS: 1 re-edit round per batch of 10
-- EXCLUSIONS: No props, prints, or location booking fees""",
-
-    "🗣️ Translation": """DELIVERABLE: Translate 10k words (Eng-Hindi) + 2 Transcripts
-- FORMAT: Word/TXT files
-- ACCURACY: >98% standard
-- REVISIONS: 1 review round included
-- EXCLUSIONS: No subtitling or legal localization""",
-
-    "🎙️ Voice-Over": """DELIVERABLE: 3 Commercial Voice-overs (30s) + 1 Podcast Edit
-- FORMAT: WAV/MP3, Commercial rights included
-- SCRIPT: Supplied by Client
-- REVISIONS: 1 correction round included
-- EXCLUSIONS: No music production or mixing"""
+    "✍️ Content Writing": """DELIVERABLE: 4 SEO Blog Articles (1000 words each)\n- FORMAT: .docx, Grammarly score >90\n- TOPICS: Approved by Client\n- DELIVERY: 2 articles/week\n- REVISIONS: 1 round included\n- EXCLUSIONS: No image sourcing.""",
+    "🎨 Graphic Design": """DELIVERABLE: Logo (PNG/SVG), Business Card (PDF)\n- BRIEF: Colors provided by Client\n- REVISIONS: 3 rounds included\n- DELIVERY: 7 days\n- EXCLUSIONS: No printing costs.""",
+    "🖼️ UI/UX & Web Design": """DELIVERABLE: Wireframe + UI Kit (5 Screens)\n- FORMAT: Figma/Sketch\n- TIMELINE: 5 days draft\n- REVISIONS: 2 rounds\n- EXCLUSIONS: No coding.""",
+    "💻 Web Development": """DELIVERABLE: 5-Page WordPress Site\n- SPECS: Speed score >80\n- DELIVERY: Staging link review\n- REVISIONS: 2 rounds\n- EXCLUSIONS: Domain/Hosting fees.""",
+    "📱 App Development": """DELIVERABLE: Android App MVP\n- SPECS: Compiles Android 11+\n- TIMELINE: Weekly sprints\n- EXCLUSIONS: Play Store fees.""",
+    "🎥 Video Editing": """DELIVERABLE: Edit 2 YouTube Videos (8 mins)\n- FORMAT: MP4, 1080p\n- TIMELINE: 48hr draft\n- REVISIONS: 2 rounds\n- EXCLUSIONS: No stock footage.""",
+    "📱 Social Media Marketing": """DELIVERABLE: 12 Posts + 4 Reels\n- FORMAT: PNG/MP4\n- SCHEDULE: 3 posts/week\n- REVISIONS: 2 rounds\n- EXCLUSIONS: No paid ads.""",
+    "📈 SEO & Digital Marketing": """DELIVERABLE: SEO Audit (20 pages)\n- FORMAT: PDF Report\n- SPECS: 30 keywords\n- REVISIONS: 1 round\n- EXCLUSIONS: No backlinks.""",
+    "📧 Virtual Assistance": """DELIVERABLE: Daily Admin Tasks\n- REPORTING: Daily Excel\n- AVAILABILITY: Mon-Fri 9-5\n- EXCLUSIONS: No personal errands.""",
+    "📸 Photography": """DELIVERABLE: 50 Product Shots\n- FORMAT: High-res JPEG\n- TIMELINE: 3 days\n- REVISIONS: 1 round\n- EXCLUSIONS: No prop fees.""",
+    "🗣️ Translation": """DELIVERABLE: Translate 10k words\n- FORMAT: Word/TXT\n- ACCURACY: >98%\n- REVISIONS: 1 round\n- EXCLUSIONS: No legal localization.""",
+    "🎙️ Voice-Over": """DELIVERABLE: 3 Commercial Scripts\n- FORMAT: WAV/MP3\n- REVISIONS: 1 correction round\n- EXCLUSIONS: No music mixing."""
 }
 
 def update_scope():
@@ -236,7 +184,6 @@ def update_from_num(): st.session_state.slider_key = st.session_state.num_key
 
 # --- SMART LEGAL LOGIC (UPDATED WITH ICONS) ---
 def get_smart_clauses(category, rate):
-    # Base Clauses
     clauses = {
         "acceptance": f"Client review within 5 days. Silence = Acceptance. 2 revisions included. Extra changes billed at {rate}/hr.",
         "warranty": "Provided 'as-is'. No post-delivery support unless specified in Annexure A.",
@@ -244,35 +191,24 @@ def get_smart_clauses(category, rate):
         "cancellation": "Cancellation after work starts incurs a forfeiture of the Advance Payment."
     }
 
-    # Tech
     if category in ["💻 Web Development", "📱 App Development"]:
         clauses["warranty"] = f"BUG FIX WARRANTY: Provider agrees to fix critical bugs reported within 30 days. Feature changes billed at {rate}/hr."
         clauses["ip_rights"] = "CODE OWNERSHIP: Client receives full source code rights upon payment. Provider retains rights to generic libraries."
-    
-    # Creative
     elif category in ["🎨 Graphic Design", "🎥 Video Editing", "🖼️ UI/UX & Web Design", "📸 Photography"]:
-        clauses["acceptance"] = "CREATIVE APPROVAL: Rejections based on 'personal taste' after initial style approval will be billed as a new Change Order."
-        clauses["ip_rights"] = "SOURCE FILES: Final deliverables transfer upon payment. Raw source files (PSD/PrProj) remain property of Provider unless purchased."
-
-    # Marketing
+        clauses["acceptance"] = "CREATIVE APPROVAL: Rejections based on 'personal taste' after initial approval billed as Change Order."
+        clauses["ip_rights"] = "SOURCE FILES: Final deliverables transfer upon payment. Raw source files remain property of Provider unless purchased."
     elif category in ["📱 Social Media Marketing", "📈 SEO & Digital Marketing"]:
-        clauses["warranty"] = "NO ROI GUARANTEE: Provider does NOT guarantee specific results (Likes, Sales, Rankings) as platform algorithms are external."
-        clauses["acceptance"] = "APPROVAL WINDOW: Content must be approved 24 hours prior to publishing deadlines."
-
-    # Text
+        clauses["warranty"] = "NO ROI GUARANTEE: Provider does NOT guarantee specific results (Likes, Sales) as platform algorithms are external."
+        clauses["acceptance"] = "APPROVAL WINDOW: Content must be approved 24 hours prior to publishing."
     elif category in ["✍️ Content Writing", "🗣️ Translation"]:
-        clauses["warranty"] = "ORIGINALITY WARRANTY: Provider warrants that work is original and passes standard plagiarism checks."
-        clauses["acceptance"] = "EDITORIAL REVIEW: Client has 3 days for factual corrections. Stylistic rewrites count as a revision."
-
-    # Audio
+        clauses["warranty"] = "ORIGINALITY WARRANTY: Provider warrants work is original and passes plagiarism checks."
+        clauses["acceptance"] = "EDITORIAL REVIEW: Client has 3 days for corrections. Stylistic rewrites count as revision."
     elif category == "🎙️ Voice-Over":
-        clauses["acceptance"] = "CORRECTION POLICY: Includes 1 round for pronunciation/pacing errors. Script changes require a new fee."
-        clauses["cancellation"] = "KILL FEE: 50% fee if cancelled after start. 100% fee if cancelled after recording session."
-        
-    # Special Translaton
+        clauses["acceptance"] = "CORRECTION POLICY: Includes 1 round for pronunciation errors. Script changes require new fee."
+        clauses["cancellation"] = "KILL FEE: 50% fee if cancelled after start. 100% fee after recording."
     elif category == "🗣️ Translation":
-        clauses["warranty"] = "ACCURACY WARRANTY: Provider guarantees >98% accuracy. Errors discovered within 7 days will be fixed free."
-        clauses["cancellation"] = "KILL FEE: Cancellation after start incurs 50% fee. Cancellation after draft delivery incurs 100% fee."
+        clauses["warranty"] = "ACCURACY WARRANTY: >98% accuracy guaranteed."
+        clauses["cancellation"] = "KILL FEE: 50% fee if cancelled after start. 100% fee after delivery."
 
     return clauses
 
@@ -281,15 +217,7 @@ with st.sidebar:
     if os.path.exists("logo.png"): st.image("logo.png", width=120)
     
     st.markdown("### 🎯 Founder’s Mission")
-    st.write("**Hi, I'm a Law Student working to empower Indian freelancers.**")
-    st.write("Every year, thousands of independent professionals lose income to late payments, scope creep, and unfair contracts.")
-    st.write("**I built this platform so every freelancer—designer, developer, writer—can generate a legally binding, MSME-protected contract in seconds.**")
-    
-    st.markdown("- 🚀 No more chasing payments")
-    st.markdown("- 🛡️ No more ignored clauses")
-    st.markdown("- 🏛️ Legal terms trusted by MSMEs")
-    
-    st.caption("**You deserve to get paid on time, every time.**")
+    st.info("**Hi, I'm a Law Student.**\nI built this tool to help Indian freelancers get paid on time, every time.")
     
     st.markdown("---")
     st.markdown("### 🆘 Need Custom Help?")
@@ -302,45 +230,46 @@ with c1:
     st.markdown("# Stop Chasing Payments.")
     st.markdown('<p class="sub-hero">Generate watertight, MSME-protected contracts for Indian Freelancers in 30 seconds.</p>', unsafe_allow_html=True)
     
-    # Dynamic Greeting
     if 'has_greeted' not in st.session_state:
         hour = datetime.datetime.now().hour
         greeting = "Good Morning" if 5 <= hour < 12 else "Good Afternoon" if 12 <= hour < 18 else "Good Evening"
         st.toast(f"👋 {greeting}, Freelancer! Let's get you protected.")
         st.session_state.has_greeted = True
 
-    st.markdown("""
-    <div style="display: flex; gap: 15px; margin-bottom: 20px;">
-        <span style="background: #1e293b; padding: 5px 10px; border-radius: 5px; color: #94a3b8; font-size: 0.9rem;">🏛️ MSME Protected</span>
-        <span style="background: #1e293b; padding: 5px 10px; border-radius: 5px; color: #94a3b8; font-size: 0.9rem;">👻 Anti-Ghosting</span>
-        <span style="background: #1e293b; padding: 5px 10px; border-radius: 5px; color: #94a3b8; font-size: 0.9rem;">🔒 IP Lock</span>
-    </div>
-    """, unsafe_allow_html=True)
-
 st.markdown("---")
+
+# VISUAL PROGRESS TRACKER
+st.markdown("""
+<div class="step-container">
+    <span class="step active">1. THE PARTIES</span>
+    <span class="step active">2. THE WORK</span>
+    <span class="step active">3. THE MONEY</span>
+    <span class="step">4. GENERATE</span>
+</div>
+""", unsafe_allow_html=True)
 
 tab1, tab2, tab3 = st.tabs(["👤 The Parties", "🎯 The Work (Scope)", "💰 The Money"])
 
 with tab1:
     c1, c2 = st.columns(2)
     with c1:
-        freelancer_name = st.text_input("Provider Name (You)", "Amit Kumar")
-        cities = ["Bengaluru, Karnataka", "New Delhi, Delhi", "Mumbai, Maharashtra", "Chennai, Tamil Nadu", "Hyderabad, Telangana", "Pune, Maharashtra", "Kolkata, West Bengal", "Gurugram, Haryana", "Noida, Uttar Pradesh", "Other (Type Manually)"]
-        selected_city = st.selectbox("Your City (Jurisdiction)", cities)
+        freelancer_name = st.text_input("Provider Name (You)", "Amit Kumar", help="Name on your Bank Account")
+        cities = ["Bengaluru, Karnataka", "New Delhi, Delhi", "Mumbai, Maharashtra", "Chennai, Tamil Nadu", "Hyderabad, Telangana", "Pune, Maharashtra", "Kolkata, West Bengal", "Other (Type Manually)"]
+        selected_city = st.selectbox("Your City (Jurisdiction)", cities, help="Where do you want to fight if they don't pay?")
         jurisdiction_city = st.text_input("Type City", "Mysuru") if selected_city == "Other (Type Manually)" else selected_city
     with c2:
-        client_name = st.text_input("Client Name", "Tech Solutions Pvt Ltd")
-        gst_registered = st.checkbox("I am GST Registered")
+        client_name = st.text_input("Client Name", "Tech Solutions Pvt Ltd", help="Company Name or Individual Name")
+        gst_registered = st.checkbox("I am GST Registered", help="Check if you have a GSTIN")
 
 with tab2:
     st.markdown('<div class="warning-box">⚠️ <b>NOTE:</b> Selecting a category adjusts the <b>Legal Clauses</b> (IP Rights, Warranty) to match your industry risks.</div>', unsafe_allow_html=True)
-    template_choice = st.selectbox("✨ Select Industry (Smart Clauses):", list(scope_templates.keys()), key="template_selector", on_change=update_scope)
-    scope_work = st.text_area("Scope of Work (Annexure A)", key="scope_text", height=200, help="Be specific!")
+    template_choice = st.selectbox("✨ Select Industry (Smart Clauses):", list(scope_templates.keys()), key="template_selector", on_change=update_scope, help="This changes the contract text automatically.")
+    scope_work = st.text_area("Scope of Work (Annexure A)", key="scope_text", height=200, help="Be specific. Vague contracts lead to unpaid work.")
 
 with tab3:
     c1, c2, c3 = st.columns(3)
-    with c1: project_fee_num = st.number_input("Total Project Fee (INR)", value=50000, step=1000)
-    with c2: hourly_rate_num = st.number_input("Overtime Rate (INR/hr)", value=2000, step=500)
+    with c1: project_fee_num = st.number_input("Total Project Fee (INR)", value=50000, step=1000, help="Total contract value")
+    with c2: hourly_rate_num = st.number_input("Overtime Rate (INR/hr)", value=2000, step=500, help="Rate for Scope Creep")
     with c3:
         st.write("Advance Required (%)")
         sc1, sc2 = st.columns([3, 1])
@@ -355,16 +284,9 @@ with c_main[1]: generate_btn = st.button("🚀 Generate Legal Contract Now", typ
 
 # --- 6. GENERATION & EXPORT ---
 if generate_btn:
-    # UX: Progress Bar
-    progress_text = "Drafting legal clauses..."
-    my_bar = st.progress(0, text=progress_text)
-    for percent_complete in range(100):
-        time.sleep(0.01)
-        my_bar.progress(percent_complete + 1, text=progress_text)
-    time.sleep(0.5)
-    my_bar.empty()
-
-    # LOGIC
+    with st.spinner("Drafting your watertight contract..."):
+        time.sleep(1.5)
+    
     safe_cost = f"Rs. {project_fee_num:,}"
     safe_rate = f"Rs. {hourly_rate_num:,}"
     safe_scope = st.session_state.scope_text.replace("₹", "Rs. ")
@@ -372,11 +294,9 @@ if generate_btn:
     smart = get_smart_clauses(template_choice, safe_rate)
     cancel_clause = smart.get("cancellation", "Cancellation after work starts incurs a forfeiture of the Advance Payment.")
 
-    # TEXT CONSTRUCTION
     full_text = f"""
     PROFESSIONAL SERVICE AGREEMENT
     Date: {datetime.date.today().strftime('%B %d, %Y')}
-    
     BETWEEN: {freelancer_name} (Provider) AND {client_name} (Client)
     
     1. PAYMENT & INTEREST (MSME ACT)
@@ -418,7 +338,7 @@ if generate_btn:
     SIGNED BY CLIENT: {client_name}
     """
 
-    # PDF GENERATION
+    # PDF
     pdf = FPDF()
     pdf.add_page()
     if os.path.exists("logo.png"):
@@ -434,12 +354,11 @@ if generate_btn:
     pdf.multi_cell(0, 5, safe_scope.encode('latin-1', 'replace').decode('latin-1'))
     pdf_data = pdf.output(dest='S').encode('latin-1')
 
-    # WORD GENERATION
+    # WORD
     docx_data = create_docx(full_text, safe_scope)
 
-    # UI OUTPUT (NO BALLOONS)
-    st.success("✅ Contract Ready! Choose your format below.")
-    
+    # UI OUTPUT
+    st.success("✅ Contract Generated Successfully! Choose your format below.")
     col_d1, col_d2 = st.columns(2)
     with col_d1:
         st.download_button("📄 Download as PDF", data=pdf_data, file_name="Contract.pdf", mime="application/pdf", use_container_width=True)
