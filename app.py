@@ -15,11 +15,11 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# --- 2. CUSTOM CSS (THE "POLISH" UPDATE) ---
+# --- 2. CUSTOM CSS (FIXED TABS) ---
 st.markdown(
     """
     <style>
-        /* BACKGROUND & ANIMATION */
+        /* BACKGROUND */
         .stApp {
             background-image: linear-gradient(rgba(10, 10, 20, 0.85), rgba(10, 10, 20, 0.90)), 
             url("https://raw.githubusercontent.com/mamamooze/freelance-shield/main/background.png");
@@ -27,7 +27,7 @@ st.markdown(
             background-attachment: fixed;
         }
 
-        /* HERO TITLE GRADIENT */
+        /* TYPOGRAPHY */
         h1 {
             background: -webkit-linear-gradient(45deg, #ffffff, #3b82f6);
             -webkit-background-clip: text;
@@ -39,17 +39,6 @@ st.markdown(
             text-shadow: 0 2px 10px rgba(0,0,0,0.2);
         }
         
-        /* CARD HOVER EFFECTS (Micro-interaction) */
-        .stInfo {
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            border: 1px solid #1e293b;
-        }
-        .stInfo:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(59, 130, 246, 0.2);
-            border: 1px solid #3b82f6;
-        }
-
         /* INPUT FIELDS */
         .stTextInput input, .stNumberInput input, .stTextArea textarea, .stSelectbox div[data-baseweb="select"] {
             background-color: #1e293b !important;
@@ -57,12 +46,8 @@ st.markdown(
             border: 1px solid #334155 !important;
             border-radius: 8px;
         }
-        .stTextInput input:focus, .stTextArea textarea:focus {
-            border-color: #3b82f6 !important;
-            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2) !important;
-        }
 
-        /* BUTTONS (Pulsing Gradient) */
+        /* BUTTONS */
         .stButton>button {
             background: linear-gradient(90deg, #3b82f6, #2563eb);
             color: white;
@@ -89,22 +74,43 @@ st.markdown(
             color: #cbd5e1 !important;
         }
         
-        /* TAB STYLING */
+        /* --- FIXED TAB STYLING (THE PILL LOOK) --- */
         .stTabs [data-baseweb="tab-list"] {
-            gap: 8px;
+            gap: 10px;
             background-color: rgba(30, 41, 59, 0.5);
             padding: 10px;
-            border-radius: 10px;
+            border-radius: 30px; /* Makes the container round */
+            border: 1px solid #334155;
         }
         .stTabs [data-baseweb="tab"] {
-            height: 50px;
-            white-space: pre-wrap;
-            border-radius: 5px;
+            height: auto !important; /* Removes fixed height issue */
+            padding-top: 8px;
+            padding-bottom: 8px;
+            padding-left: 20px;
+            padding-right: 20px;
+            background-color: transparent;
+            border-radius: 20px;
             color: #cbd5e1;
+            border: none;
+            font-weight: 600;
         }
         .stTabs [aria-selected="true"] {
-            background-color: #3b82f6;
+            background-color: #3b82f6; /* The Blue Box */
             color: white !important;
+            box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3);
+        }
+        
+        /* Preview Box Styling */
+        .stTextArea textarea {
+            font-family: 'Courier New', monospace !important;
+            background-color: #0f172a !important;
+            color: #e2e8f0 !important;
+            border: 1px solid #3b82f6 !important;
+        }
+        
+        /* Warning Box */
+        .warning-box {
+            background-color: rgba(255, 193, 7, 0.15); border-left: 4px solid #ffc107; padding: 10px; margin-bottom: 10px; border-radius: 4px; color: #ffecb3; font-size: 0.9rem;
         }
     </style>
     """,
@@ -117,21 +123,80 @@ if 'slider_key' not in st.session_state: st.session_state.slider_key = 50
 if 'num_key' not in st.session_state: st.session_state.num_key = 50
 if 'scope_text' not in st.session_state: st.session_state.scope_text = ""
 
-# (KEEPING YOUR FULL 12 TEMPLATE LIST HERE - ABBREVIATED FOR BREVITY, BUT PASTE YOUR FULL LIST BACK)
+# FULL 12 TEMPLATE LIBRARY
 scope_templates = {
     "Select a template...": "",
-    "Social Media Marketing": "1. DELIVERABLE: 12 Static Posts/month\n   - CRITERIA: PNG Format, Approved by 25th.\n2. DELIVERABLE: 4 Reels/month\n   - CRITERIA: Under 60s, trending audio.",
-    "Video Editing": "1. DELIVERABLE: Edit 1 YouTube Video (10 mins)\n   - CRITERIA: 1080p, Color Graded, Audio Mixed.\n2. TIMELINE: Draft delivered within 48 hours.",
-    "Web Development": "1. DELIVERABLE: 5-Page WordPress Site\n   - CRITERIA: Mobile responsive, Speed score >80.\n2. EXCLUSION: Domain and Hosting fees.",
-    "Graphic Design": "1. DELIVERABLE: 3 Logo Concepts\n2. DELIVERABLE: Brand Style Guide\n3. REVISIONS: 3 Rounds included.",
-    "Content Writing": "1. DELIVERABLE: 4 SEO Blogs (1000 words)\n2. CRITERIA: Grammarly Score >90.\n3. EXCLUSION: Image sourcing.",
-    "App Development": "1. DELIVERABLE: Android MVP (5 screens)\n2. CRITERIA: Crash-free on Android 12+.\n3. EXCLUSION: Play Store upload fees.",
-    "UI/UX & Web Design": "1. DELIVERABLE: Wireframe (5 screens)\n2. CRITERIA: Figma file delivery.\n3. EXCLUSION: Coding/Development.",
-    "SEO & Digital Marketing": "1. DELIVERABLE: SEO Audit Report\n2. DELIVERABLE: Keyword Plan (30 keywords).\n3. EXCLUSION: Backlink purchasing.",
-    "Virtual Assistance": "1. DELIVERABLE: Daily Email Management\n2. AVAILABILITY: Mon-Fri, 9am-5pm.\n3. EXCLUSION: Personal errands.",
-    "Photography": "1. DELIVERABLE: 50 Product Shots (Edited)\n2. FORMAT: High-res JPEG.\n3. EXCLUSION: Prop sourcing costs.",
-    "Translation": "1. DELIVERABLE: 10k words Eng-to-Hindi\n2. ACCURACY: 98% standard.\n3. EXCLUSION: Legal localization.",
-    "Voice-Over": "1. DELIVERABLE: 3 Commercial Scripts (30s)\n2. FORMAT: WAV/MP3.\n3. EXCLUSION: Background music mixing."
+    
+    "Content Writing": """DELIVERABLE: 4 SEO Blog Articles (1000 words each)
+- FORMAT: .docx, Grammarly score >90
+- TOPICS: Approved by Client in advance
+- DELIVERY: 2 articles/week via email
+- REVISIONS: 1 round included per article
+- EXCLUSIONS: No image sourcing, keyword research, or posting""",
+
+    "Graphic Design": """DELIVERABLE: Logo (PNG/SVG), Business Card (PDF), Banner
+- BRIEF: Colors/Fonts provided by Client
+- REVISIONS: 3 feedback rounds included (within 2 days)
+- DELIVERY: Final files via Google Drive in 7 days
+- EXCLUSIONS: No printing costs or stock image purchase""",
+
+    "UI/UX & Web Design": """DELIVERABLE: Wireframe + UI Kit (5 Screens)
+- FORMAT: Figma/Sketch/XD files
+- TIMELINE: Initial draft in 5 days
+- REVISIONS: 2 rounds included
+- EXCLUSIONS: No coding/development included""",
+
+    "Web Development": """DELIVERABLE: 5-Page Responsive Website (WordPress)
+- SPECS: Speed score >80, Contact Form, About Page
+- DELIVERY: Staging link for review, ZIP files after payment
+- REVISIONS: 2 rounds included
+- EXCLUSIONS: Domain/Hosting fees and content writing not included""",
+
+    "App Development": """DELIVERABLE: Android App MVP (5 Core Features)
+- SPECS: Compiles on Android 11+, Source Code included
+- TIMELINE: Weekly sprints, 30-day bug fix warranty
+- EXCLUSIONS: Google Play Store upload fees not included""",
+
+    "Video Editing": """DELIVERABLE: Edit 2 YouTube Videos (max 8 mins)
+- FORMAT: MP4, 1080p, Color Graded
+- TIMELINE: Draft within 48 hours of receiving raw files
+- REVISIONS: 2 feedback rounds included
+- EXCLUSIONS: No captions, thumbnails, or stock footage""",
+
+    "Social Media Marketing": """DELIVERABLE: 12 Static Posts + 4 Reels (Monthly)
+- FORMAT: PNG (1080px) and MP4 (<60s)
+- SCHEDULE: 3 posts/week, approved by 25th of prev month
+- REVISIONS: 2 rounds per month included
+- EXCLUSIONS: No paid ad management or community replies""",
+
+    "SEO & Digital Marketing": """DELIVERABLE: SEO Audit (20 pages) + Keyword Plan
+- FORMAT: PDF Report, Excel Sheet
+- SPECS: 30 priority keywords, competitor analysis
+- REVISIONS: 1 round included
+- EXCLUSIONS: On-page implementation and backlinks not included""",
+
+    "Virtual Assistance": """DELIVERABLE: Daily Admin Tasks (Email/Calendar)
+- REPORTING: Daily Excel report, Inbox cleared
+- AVAILABILITY: Mon-Fri, 9am-5pm
+- EXCLUSIONS: No calls, travel booking, or personal errands""",
+
+    "Photography": """DELIVERABLE: 50 Product Shots (Edited)
+- FORMAT: High-res JPEGs, 3000px, White Background
+- TIMELINE: Edits delivered in 3 days
+- REVISIONS: 1 re-edit round per batch of 10
+- EXCLUSIONS: No props, prints, or location booking fees""",
+
+    "Translation": """DELIVERABLE: Translate 10k words (Eng-Hindi) + 2 Transcripts
+- FORMAT: Word/TXT files
+- ACCURACY: >98% standard
+- REVISIONS: 1 review round included
+- EXCLUSIONS: No subtitling or legal localization""",
+
+    "Voice-Over": """DELIVERABLE: 3 Commercial Voice-overs (30s) + 1 Podcast Edit
+- FORMAT: WAV/MP3, Commercial rights included
+- SCRIPT: Supplied by Client
+- REVISIONS: 1 correction round included
+- EXCLUSIONS: No music production or mixing"""
 }
 
 def update_scope():
@@ -141,15 +206,17 @@ def update_scope():
 def update_from_slider(): st.session_state.num_key = st.session_state.slider_key
 def update_from_num(): st.session_state.slider_key = st.session_state.num_key
 
-# --- 4. DYNAMIC LEGAL LOGIC ---
+# --- 4. DYNAMIC LEGAL LOGIC (SMART CLAUSES) ---
 def get_smart_clauses(category, rate):
     # Base Clauses
     clauses = {
         "acceptance": f"Client review within 5 days. Silence = Acceptance. 2 revisions included. Extra changes billed at {rate}/hr.",
         "warranty": "Provided 'as-is'. No post-delivery support unless specified in Annexure A.",
-        "ip_rights": "Client owns IP only AFTER full payment. Use before payment is Copyright Infringement."
+        "ip_rights": "Client owns IP only AFTER full payment. Use before payment is Copyright Infringement.",
+        "cancellation": "Cancellation after work starts incurs a forfeiture of the Advance Payment."
     }
 
+    # CATEGORY LOGIC
     if category in ["Web Development", "App Development"]:
         clauses["warranty"] = f"BUG FIX WARRANTY: Provider agrees to fix critical bugs reported within 30 days. Feature changes billed at {rate}/hr."
         clauses["ip_rights"] = "CODE OWNERSHIP: Client receives full source code rights upon payment. Provider retains rights to generic libraries."
@@ -194,7 +261,7 @@ with c1:
     st.markdown("# Stop Chasing Payments.")
     st.markdown('<p class="sub-hero">Generate watertight, MSME-protected contracts for Indian Freelancers in 30 seconds.</p>', unsafe_allow_html=True)
     
-    # Dynamic Greeting (Friendly Touch)
+    # Dynamic Greeting
     hour = datetime.datetime.now().hour
     greeting = "Good Morning" if 5 <= hour < 12 else "Good Afternoon" if 12 <= hour < 18 else "Good Evening"
     st.toast(f"👋 {greeting}, Freelancer! Let's get you protected.")
@@ -209,7 +276,7 @@ with c1:
 
 st.markdown("---")
 
-# ADDED ICONS TO TABS FOR VISUAL ENGAGEMENT
+# TABS
 tab1, tab2, tab3 = st.tabs(["👤 The Parties", "🎯 The Work (Scope)", "💰 The Money"])
 
 with tab1:
@@ -250,7 +317,7 @@ with c_main[1]: generate_btn = st.button("🚀 Generate Legal Contract Now", typ
 # --- 7. GENERATION LOGIC ---
 if generate_btn:
     with st.spinner("Drafting your watertight contract..."):
-        time.sleep(1.5) # Fake loading for UX "weight"
+        time.sleep(1.5)
     
     safe_cost = f"Rs. {project_fee_num:,}"
     safe_rate = f"Rs. {hourly_rate_num:,}"
@@ -258,6 +325,8 @@ if generate_btn:
     gst_clause = "(Exclusive of GST)" if gst_registered else ""
 
     smart = get_smart_clauses(template_choice, safe_rate)
+    
+    cancel_clause = smart.get("cancellation", "Cancellation after work starts incurs a forfeiture of the Advance Payment.")
 
     # CONTRACT TEXT
     full_contract_text = "PROFESSIONAL SERVICE AGREEMENT\n"
@@ -275,8 +344,9 @@ if generate_btn:
     full_contract_text += "6. COMMUNICATION POLICY\nProvider will respond within 1 business day. If Client is unresponsive for >14 days, the contract terminates (Ghosting Clause). Standby fee of Rs. 500/day applies for extended delays.\n\n"
     full_contract_text += "7. FORCE MAJEURE\nNeither party is liable for delays caused by natural disasters, pandemics, or internet infrastructure failures.\n\n"
     full_contract_text += "8. LIMITATION OF LIABILITY\nProvider's total liability shall not exceed the Total Project Fee paid. No liability for indirect damages.\n\n"
-    full_contract_text += "9. JURISDICTION & AMENDMENT\nAmendments must be in writing. Disputes subject to Arbitration in " + jurisdiction_city + ", India.\n\n"
-    full_contract_text += "10. GST COMPLIANCE\nAll fees are exclusive of applicable GST. Client bears GST liability. Provider warrants tax compliance.\n\n"
+    full_contract_text += "9. CANCELLATION / KILL FEE\n" + f"{cancel_clause}\n\n"
+    full_contract_text += "10. JURISDICTION & AMENDMENT\nAmendments must be in writing. Disputes subject to Arbitration in " + jurisdiction_city + ", India.\n\n"
+    full_contract_text += "11. GST COMPLIANCE\nAll fees are exclusive of applicable GST. Client bears GST liability. Provider warrants tax compliance.\n\n"
     
     full_contract_text += "-"*60 + "\n"
     full_contract_text += "IN WITNESS WHEREOF, the parties have executed this Agreement.\n\n"
