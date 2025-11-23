@@ -14,7 +14,7 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# --- 2. CUSTOM CSS ---
+# --- 2. CUSTOM CSS (High Contrast) ---
 st.markdown(
     """
     <style>
@@ -35,7 +35,6 @@ st.markdown(
             border-radius: 8px; width: 100%; text-transform: uppercase; letter-spacing: 1px; transition: all 0.3s;
         }
         .stButton>button:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(37, 99, 235, 0.3); }
-        /* Sidebar Text Fix */
         [data-testid="stSidebar"] p, [data-testid="stSidebar"] label { color: #cbd5e1 !important; }
     </style>
     """,
@@ -129,7 +128,7 @@ st.markdown("---")
 c_main = st.columns([1, 2, 1])
 with c_main[1]: generate_btn = st.button("🚀 Generate Legal Contract Now", type="primary")
 
-# --- 6. GENERATION LOGIC (UPDATED WITH PERPLEXITY SUGGESTIONS) ---
+# --- 6. GENERATION LOGIC (FINAL VERSION WITH ALL PERPLEXITY UPGRADES) ---
 if generate_btn:
     safe_cost = f"Rs. {project_fee_num:,}"
     safe_rate = f"Rs. {hourly_rate_num:,}"
@@ -147,12 +146,12 @@ if generate_btn:
     full_contract_text += f"Total Fee: {safe_cost} {gst_clause}. Advance: {advance_percent}%. "
     full_contract_text += "Late payments attract compound interest at 3x the Bank Rate notified by RBI (Section 16, MSMED Act, 2006).\n\n"
     
-    # 2. Acceptance Protocol (Perplexity Suggestion #2)
+    # 2. Acceptance Protocol (Perplexity Upgrade)
     full_contract_text += "2. ACCEPTANCE & REVISIONS\n"
-    full_contract_text += "The Client must accept or reject deliverables within 5 business days. Silence shall be deemed as acceptance. "
+    full_contract_text += "The Client shall review deliverables within 5 business days. Silence denotes acceptance. "
     full_contract_text += f"Includes 2 rounds of revisions. Further changes billed at {safe_rate}/hr.\n\n"
     
-    # 3. Confidentiality (Perplexity Suggestion #1)
+    # 3. Confidentiality (Perplexity Upgrade)
     full_contract_text += "3. CONFIDENTIALITY (NDA)\n"
     full_contract_text += "Both parties agree to keep proprietary information confidential during and for two (2) years after termination.\n\n"
     
@@ -160,21 +159,32 @@ if generate_btn:
     full_contract_text += "4. INTELLECTUAL PROPERTY (IP LOCK)\n"
     full_contract_text += "The Client owns the IP rights only AFTER full and final payment. Use before payment is Copyright Infringement.\n\n"
     
-    # 5. Warranty & Support (Perplexity Suggestion #3)
+    # 5. Warranty & Support (Perplexity Upgrade)
     full_contract_text += "5. WARRANTY & SUPPORT\n"
-    full_contract_text += "Deliverables are provided 'as-is'. No post-delivery support/bug-fixing is included unless specified in Annexure A.\n\n"
+    full_contract_text += "Deliverables are provided 'as-is'. No post-delivery support/bug-fixing is included unless specified in Annexure A. "
+    full_contract_text += f"Bug fixes requested after 7 days will be billed at {safe_rate}/hr.\n\n"
     
-    # 6. Communication (Perplexity Suggestion #7)
+    # 6. Communication (Perplexity Upgrade)
     full_contract_text += "6. COMMUNICATION POLICY\n"
-    full_contract_text += "Provider will respond within 1 business day. If Client is unresponsive for >14 days, the contract terminates (Ghosting Clause).\n\n"
+    full_contract_text += "Provider will respond within 1 business day. If Client is unresponsive for >14 days, the contract terminates (Ghosting Clause). "
+    full_contract_text += "Standby fee of Rs. 500/day applies for extended delays.\n\n"
     
-    # 7. Force Majeure (Perplexity Suggestion #4)
+    # 7. Force Majeure (Perplexity Upgrade)
     full_contract_text += "7. FORCE MAJEURE\n"
     full_contract_text += "Neither party is liable for delays caused by natural disasters, pandemics, or internet infrastructure failures.\n\n"
     
-    # 8. Jurisdiction & Amendment (Perplexity Suggestion #5)
-    full_contract_text += "8. JURISDICTION & AMENDMENT\n"
-    full_contract_text += "Amendments must be in writing. Disputes subject to Arbitration in " + jurisdiction_city + ", India.\n\n"
+    # 8. Limitation of Liability
+    full_contract_text += "8. LIMITATION OF LIABILITY\n"
+    full_contract_text += "Provider's liability shall not exceed the Total Project Fee paid. No liability for indirect damages.\n\n"
+
+    # 9. Jurisdiction & Amendment (Perplexity Upgrade)
+    full_contract_text += "9. JURISDICTION & AMENDMENT\n"
+    full_contract_text += "This Agreement represents the entire understanding. Amendments must be in writing. "
+    full_contract_text += "Disputes subject to Arbitration in " + jurisdiction_city + ", India.\n\n"
+    
+    # 10. GST Clause (Perplexity Upgrade)
+    full_contract_text += "10. GST COMPLIANCE\n"
+    full_contract_text += "All fees are exclusive of applicable GST. Client bears GST liability. Provider warrants tax compliance.\n\n"
     
     full_contract_text += "-"*60 + "\n"
     full_contract_text += "IN WITNESS WHEREOF, the parties have executed this Agreement.\n\n"
