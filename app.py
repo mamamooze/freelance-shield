@@ -162,7 +162,7 @@ scope_templates = {
     "✍️ Content Writing": """DELIVERABLE: 4 SEO Blog Articles (1000 words each)\n- FORMAT: .docx, Grammarly score >90\n- TOPICS: Approved by Client in advance\n- DELIVERY: 2 articles/week via email\n- REVISIONS: 1 round included per article\n- EXCLUSIONS: No image sourcing, keyword research, or posting""",
     "🎨 Graphic Design": """DELIVERABLE: Logo (PNG/SVG), Business Card (PDF), Banner\n- BRIEF: Colors/Fonts provided by Client\n- REVISIONS: 3 feedback rounds included (within 2 days)\n- DELIVERY: Final files via Google Drive in 7 days\n- EXCLUSIONS: No printing costs or stock image purchase""",
     "🖼️ UI/UX & Web Design": """DELIVERABLE: Wireframe + UI Kit (5 Screens)\n- FORMAT: Figma/Sketch/XD files\n- TIMELINE: Initial draft in 5 days\n- REVISIONS: 2 rounds included\n- EXCLUSIONS: No coding/development included""",
-    "💻 Web Development": """DELIVERABLE: 5-Page Responsive Website (WordPress)\n- SPECS: Speed score >80, Contact Form, About Page\n- DELIVERY: Staging link for review, ZIP files after payment\n- REVISIONS: 2 rounds included\n- EXCLUSIONS: Domain/Hosting fees and content writing not included""",
+    "💻 Web Development": """DELIVERABLE: 5-Page WordPress Site\n- SPECS: Speed score >80, Contact Form, About Page\n- DELIVERY: Staging link for review, ZIP files after payment\n- REVISIONS: 2 rounds included\n- EXCLUSIONS: Domain/Hosting fees and content writing not included""",
     "📱 App Development": """DELIVERABLE: Android App MVP (5 Core Features)\n- SPECS: Compiles on Android 11+, Source Code included\n- TIMELINE: Weekly sprints, 30-day bug fix warranty\n- EXCLUSIONS: Google Play Store upload fees not included""",
     "🎥 Video Editing": """DELIVERABLE: Edit 2 YouTube Videos (max 8 mins)\n- FORMAT: MP4, 1080p, Color Graded\n- TIMELINE: Draft within 48 hours of receiving raw files\n- REVISIONS: 2 feedback rounds included\n- EXCLUSIONS: No captions, thumbnails, or stock footage""",
     "📱 Social Media Marketing": """DELIVERABLE: 12 Static Posts + 4 Reels (Monthly)\n- FORMAT: PNG (1080px) and MP4 (<60s)\n- SCHEDULE: 3 posts/week, approved by 25th of prev month\n- REVISIONS: 2 rounds per month included\n- EXCLUSIONS: No paid ad management or community replies""",
@@ -180,42 +180,45 @@ def update_scope():
 def update_from_slider(): st.session_state.num_key = st.session_state.slider_key
 def update_from_num(): st.session_state.slider_key = st.session_state.num_key
 
+# --- SMART LEGAL LOGIC (CRITICAL FIX: MATCHING EMOJIS) ---
 def get_smart_clauses(category, rate):
-    # DEFAULT / BASE CLAUSES
+    # Base Clauses
     clauses = {
-        "revisions": f"2 rounds of revisions included. Revisions must be requested within 2 business days. Extra changes billed at {rate}/hr.",
-        "ip": "Client shall receive full ownership ONLY upon receipt of full payment. Until then, Provider retains exclusive property rights.",
-        "warranty": "Deliverables are provided 'as-is'. No guarantees regarding third-party compatibility or market performance.",
-        "cancellation": "If Client cancels after work commences, Client forfeits the advance payment in full."
+        "acceptance": f"Client review within 5 days. Silence = Acceptance. 2 revisions included. Extra changes billed at {rate}/hr.",
+        "warranty": "Provided 'as-is'. No post-delivery support unless specified in Annexure A.",
+        "ip_rights": "Client owns IP only AFTER full payment. Use before payment is Copyright Infringement.",
+        "cancellation": "Cancellation after work starts incurs a forfeiture of the Advance Payment."
     }
 
-    # 1. TECHNOLOGY (WEB/APP)
+    # Tech (Emojis match template keys exactly)
     if category in ["💻 Web Development", "📱 App Development"]:
-        clauses["ip"] = "Client receives full source code rights upon final payment. Provider retains rights to generic libraries/frameworks."
-        clauses["warranty"] = "BUG FIX WARRANTY: Provider agrees to fix critical bugs reported within 30 days of delivery. No third-party modifications allowed."
-        clauses["cancellation"] = "Client owes payment for all completed milestones plus 50% of current milestone in progress."
-
-    # 2. CREATIVE (DESIGN/PHOTO/VIDEO/UI)
+        clauses["warranty"] = f"BUG FIX WARRANTY: Provider agrees to fix critical bugs reported within 30 days. Feature changes billed at {rate}/hr."
+        clauses["ip_rights"] = "CODE OWNERSHIP: Client receives full source code rights upon payment. Provider retains rights to generic libraries."
+    
+    # Creative
     elif category in ["🎨 Graphic Design", "🎥 Video Editing", "🖼️ UI/UX & Web Design", "📸 Photography"]:
-        clauses["ip"] = "Final deliverables (PNG/JPG/MP4) transfer to Client. Raw source files (PSD/AI/PrProj) remain property of Provider unless purchased."
-        clauses["revisions"] = "Rejections based solely on 'personal taste' after initial style approval will constitute a new project fee."
-        
-    # 3. MARKETING (SOCIAL/SEO)
+        clauses["acceptance"] = "CREATIVE APPROVAL: Rejections based on 'personal taste' after initial style approval will be billed as a new Change Order."
+        clauses["ip_rights"] = "SOURCE FILES: Final deliverables transfer upon payment. Raw source files (PSD/PrProj) remain property of Provider unless purchased."
+
+    # Marketing
     elif category in ["📱 Social Media Marketing", "📈 SEO & Digital Marketing"]:
-        clauses["warranty"] = "NO ROI GUARANTEE: Provider does NOT guarantee specific business outcomes (sales, followers, rankings)."
-        clauses["revisions"] = "Content must be approved 24 hours prior to scheduled publishing deadlines."
-        clauses["cancellation"] = "30 days written notice required for termination. Payment due for current month."
+        clauses["warranty"] = "NO ROI GUARANTEE: Provider does NOT guarantee specific results (Likes, Sales, Rankings) as platform algorithms are external."
+        clauses["acceptance"] = "APPROVAL WINDOW: Content must be approved 24 hours prior to publishing deadlines."
 
-    # 4. WRITING/TRANSLATION
+    # Text
     elif category in ["✍️ Content Writing", "🗣️ Translation"]:
-        clauses["warranty"] = "ORIGINALITY WARRANTY: Provider warrants that work is original (not plagiarized). Translation accuracy >98%."
-        clauses["revisions"] = "1 review round covers accuracy/grammar. Style changes or re-translation requests are billed separately."
-        clauses["cancellation"] = "50% fee due if cancelled after work begins. 100% fee due if cancelled after draft delivery."
+        clauses["warranty"] = "ORIGINALITY WARRANTY: Provider warrants that work is original and passes standard plagiarism checks."
+        clauses["acceptance"] = "EDITORIAL REVIEW: Client has 3 days for factual corrections. Stylistic rewrites count as a revision."
 
-    # 5. VOICE OVER
+    # Audio
     elif category == "🎙️ Voice-Over":
-        clauses["revisions"] = "One revision round covers pronunciation errors only. Script changes or creative redirection require a new fee."
-        clauses["cancellation"] = "50% kill fee if cancelled after start. 100% fee if cancelled after recording session."
+        clauses["acceptance"] = "CORRECTION POLICY: Includes 1 round for pronunciation/pacing errors. Script changes require a new fee."
+        clauses["cancellation"] = "KILL FEE: 50% fee if cancelled after start. 100% fee if cancelled after recording session."
+        
+    # Special Translation Logic
+    if category == "🗣️ Translation":
+        clauses["warranty"] = "ACCURACY WARRANTY: Provider guarantees >98% accuracy. Errors discovered within 7 days will be fixed free."
+        clauses["cancellation"] = "KILL FEE: Cancellation after start incurs 50% fee. Cancellation after draft delivery incurs 100% fee."
 
     return clauses
 
@@ -308,7 +311,7 @@ with tab3:
 
 st.markdown("---")
 
-# --- CONSENT ---
+# --- CONSENT & GENERATION ---
 check_terms = st.checkbox("I agree to the Terms of Use & Privacy Policy. I understand this is a tool, not legal advice.")
 
 c_main = st.columns([1, 2, 1])
@@ -319,7 +322,6 @@ with c_main[1]:
         st.button("🚀 Generate Legal Contract Now", disabled=True, help="Please accept the Terms to proceed.")
         generate_btn = False
 
-# --- 6. GENERATION & EXPORT ---
 if generate_btn:
     with st.spinner("Drafting your watertight contract..."):
         time.sleep(1.5)
@@ -329,60 +331,51 @@ if generate_btn:
     safe_scope = st.session_state.scope_text.replace("₹", "Rs. ")
     gst_clause = "(Exclusive of GST)" if gst_registered else ""
     smart = get_smart_clauses(template_choice, safe_rate)
+    cancel_clause = smart.get("cancellation", "Cancellation after work starts incurs a forfeiture of the Advance Payment.")
 
     full_text = f"""
-FREELANCE SHIELD - PROFESSIONAL SERVICE AGREEMENT
-Date: {datetime.date.today().strftime('%B %d, %Y')}
-
-BETWEEN: {freelancer_name} (Provider)
-AND {client_name} (Client)
-
-1. SERVICES & SCOPE
-Provider agrees to perform services as described in Annexure A (Scope of Work).
-
-2. PAYMENT & INTEREST (MSME ACT COMPLIANT)
-Total Fee: {safe_cost} {gst_clause}
-Advance Payment: {advance_percent}% due upon signing. Work commences only upon realization.
-Late Payment Interest: Any payment delayed beyond 45 days will attract compound interest at 3x the Bank Rate notified by the RBI (Section 16, MSMED Act, 2006).
-
-3. ACCEPTANCE & REVISIONS
-Review Period: {smart['acceptance']}
-
-4. INTELLECTUAL PROPERTY RIGHTS
-{smart['ip_rights']}
-
-5. WARRANTY & LIABILITY
-{smart['warranty']}
-Limitation of Liability: Provider's total liability is strictly limited to the Total Fee paid.
-
-6. CONFIDENTIALITY (NON-DISCLOSURE)
-Both parties agree to maintain strict confidentiality regarding proprietary information for 2 years post-termination.
-
-7. CANCELLATION & KILL FEE
-{smart['cancellation']}
-
-8. COMMUNICATION & GHOSTING
-Response Time: Provider responds within 1 business day.
-Ghosting Protection: If Client is unresponsive for 14 consecutive days, the project is deemed terminated and advance is forfeited.
-
-9. FORCE MAJEURE
-Neither party shall be liable for delays due to acts of God, internet failure, or government action.
-
-10. DISPUTE RESOLUTION & JURISDICTION
-Governing Law: Laws of India.
-Arbitration: Disputes unresolved after 15 days of negotiation shall be referred to binding arbitration in {jurisdiction_city}, India.
-
-11. ENTIRE AGREEMENT
-This Agreement supersedes all prior discussions. Modifications must be in writing.
-
----------------------------------------------------
-SIGNED BY PROVIDER: 
-Name: {freelancer_name}
-Date: ________________
-
-SIGNED BY CLIENT: 
-Name: {client_name}
-Date: ________________
+    PROFESSIONAL SERVICE AGREEMENT
+    Date: {datetime.date.today().strftime('%B %d, %Y')}
+    
+    BETWEEN: {freelancer_name} (Provider) AND {client_name} (Client)
+    
+    1. PAYMENT & INTEREST (MSME ACT)
+    Total Fee: {safe_cost} {gst_clause}. Advance: {advance_percent}%.
+    Late payments attract compound interest at 3x the Bank Rate (Section 16, MSMED Act, 2006).
+    
+    2. ACCEPTANCE & REVISIONS
+    {smart['acceptance']}
+    
+    3. CONFIDENTIALITY (NDA)
+    Strict confidentiality for 2 years post-termination.
+    
+    4. IP RIGHTS (IP LOCK)
+    {smart['ip_rights']}
+    
+    5. WARRANTY & SUPPORT
+    {smart['warranty']}
+    
+    6. COMMUNICATION POLICY
+    Provider responds within 1 business day. Client silence >14 days = Termination (Ghosting).
+    
+    7. FORCE MAJEURE
+    Not liable for acts of God or internet failure.
+    
+    8. LIMITATION OF LIABILITY
+    Liability limited to Total Fee paid. No indirect damages.
+    
+    9. CANCELLATION / KILL FEE
+    {cancel_clause}
+    
+    10. JURISDICTION
+    Disputes subject to Arbitration in {jurisdiction_city}, India.
+    
+    11. GST COMPLIANCE
+    Client bears GST liability.
+    
+    ---------------------------------------------------
+    SIGNED BY PROVIDER: {freelancer_name}
+    SIGNED BY CLIENT: {client_name}
     """
 
     # PDF
@@ -405,7 +398,7 @@ Date: ________________
     docx_data = create_docx(full_text, safe_scope)
 
     # UI OUTPUT
-    st.success("✅ Contract Generated Successfully! Choose your format below.")
+    st.success("✅ Contract Ready! Choose your format below.")
     col_d1, col_d2 = st.columns(2)
     with col_d1:
         st.download_button("📄 Download as PDF", data=pdf_data, file_name="Contract.pdf", mime="application/pdf", use_container_width=True)
