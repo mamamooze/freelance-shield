@@ -97,6 +97,14 @@ st.markdown(
             transform: translateY(-2px);
             box-shadow: 0 6px 20px rgba(0, 210, 255, 0.5);
         }
+        /* Disabled Button Style */
+        .stButton>button:disabled {
+            background-color: rgba(30, 41, 59, 0.5) !important;
+            color: #64748b !important;
+            border: 1px solid #475569 !important;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
 
         /* SIDEBAR */
         [data-testid="stSidebar"] { background-color: #0f172a; border-right: 1px solid #1e293b; }
@@ -233,7 +241,6 @@ def create_professional_pdf(full_text, annexure_text, provider_name, client_name
 
 def create_professional_docx(full_text, annexure_text, provider_name, client_name):
     doc = Document()
-    
     title = doc.add_heading('PROFESSIONAL SERVICE AGREEMENT', 0)
     title.alignment = WD_ALIGN_PARAGRAPH.CENTER
     title_run = title.runs[0]
@@ -244,13 +251,11 @@ def create_professional_docx(full_text, annexure_text, provider_name, client_nam
     date_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
     date_run = date_para.add_run(f"Date: {datetime.date.today().strftime('%B %d, %Y')}")
     date_run.font.size = Pt(11)
-    
     doc.add_paragraph()
     
     for line in full_text.split('\n'):
         line = line.strip()
         if not line: continue
-        
         if line and line[0].isdigit() and '.' in line[:3]:
             heading = doc.add_heading(line, level=2)
             heading_run = heading.runs[0]
@@ -275,7 +280,6 @@ def create_professional_docx(full_text, annexure_text, provider_name, client_nam
     
     doc.add_paragraph()
     doc.add_paragraph('_' * 60)
-    
     sig_section = doc.add_paragraph()
     sig_section.add_run(f'\nProvider Signature: _____________________ Date: __________\n')
     sig_section.add_run(f'Name: {provider_name}\n\n')
@@ -317,13 +321,13 @@ def get_smart_clauses(category, rate):
         "warranty": "Provided 'as-is'. No post-delivery support unless specified in Annexure A.",
         "ip_rights": "Client owns IP only AFTER full payment. Use before payment is Copyright Infringement.",
         "cancellation": "Cancellation after work starts incurs forfeiture of the Advance Payment.",
-        "termination": "Provider may terminate with 7 days written notice if Client breaches payment terms. Client owes payment for work completed till termination date."
+        "termination": "Provider may terminate with 7 days written notice if Client breaches payment terms."
     }
     if category in ["💻 Web Development", "📱 App Development"]:
         clauses["warranty"] = f"BUG FIX WARRANTY: Provider agrees to fix critical bugs reported within 30 days. Feature changes billed at {rate}/hr."
         clauses["ip_rights"] = "CODE OWNERSHIP: Client receives full source code rights upon payment. Provider retains rights to generic libraries."
     elif category in ["🎨 Graphic Design", "🎥 Video Editing", "🖼️ UI/UX & Web Design", "📸 Photography"]:
-        clauses["acceptance"] = "CREATIVE APPROVAL: Rejections based on 'personal taste' after initial style approval will be billed as a new Change Order."
+        clauses["acceptance"] = "CREATIVE APPROVAL: Rejections based on 'personal taste' after initial approval billed as Change Order."
         clauses["ip_rights"] = "SOURCE FILES: Final deliverables transfer upon payment. Raw source files remain property of Provider unless purchased."
     elif category in ["📱 Social Media Marketing", "📈 SEO & Digital Marketing"]:
         clauses["warranty"] = "NO ROI GUARANTEE: Provider does NOT guarantee specific results (Likes, Sales, Rankings)."
@@ -432,12 +436,15 @@ st.markdown("---")
 check_terms = st.checkbox("I agree to the Terms of Use & Privacy Policy. I understand this is a tool, not legal advice.")
 
 c_main = st.columns([1, 2, 1])
+
+# Initialize generate_btn outside columns to prevent scope error
+generate_btn = False
+
 with c_main[1]: 
     if check_terms:
         generate_btn = st.button("🚀 Generate Legal Contract Now", type="primary")
     else:
         st.button("🚀 Generate Legal Contract Now", disabled=True, help="Please accept the Terms to proceed.")
-        generate_btn = False
 
 if generate_btn:
     if template_choice == "Select a template..." or template_choice == "":
@@ -451,7 +458,6 @@ if generate_btn:
     with st.spinner("Drafting your watertight contract..."):
         time.sleep(1.5)
     
-    # CRITICAL FIX: CALCULATE VARIABLES INSIDE GENERATION BLOCK
     advance_amount = int(project_fee_num * (advance_percent/100))
     balance_amount = project_fee_num - advance_amount
     
@@ -583,9 +589,9 @@ Date: _____________________
         
         col_d1, col_d2 = st.columns(2)
         with col_d1:
-            st.download_button("📄 Download as PDF", data=pdf_data, file_name="Contract.pdf", mime="application/pdf", use_container_width=True)
+            st.download_button("📄 Download PDF", data=pdf_data, file_name="Contract.pdf", mime="application/pdf", use_container_width=True)
         with col_d2:
-            st.download_button("📝 Download as Word (Editable)", data=docx_data, file_name="Contract.docx", mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document", use_container_width=True)
+            st.download_button("📝 Download Word", data=docx_data, file_name="Contract.docx", mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document", use_container_width=True)
             
         with st.expander("👀 Preview Contract"):
             st.text_area("", value=full_text + "\n\n" + "="*60 + "\nANNEXURE A\n" + "="*60 + "\n\n" + safe_scope, height=300)
