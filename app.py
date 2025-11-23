@@ -18,9 +18,8 @@ st.set_page_config(
 st.markdown(
     """
     <style>
-        /* BACKGROUND */
+        /* BACKGROUND - Opacity set to 0.75 so image is visible */
         .stApp {
-            /* Changed opacity from 0.95 to 0.75 so the image shows through */
             background-image: linear-gradient(rgba(10, 10, 20, 0.75), rgba(10, 10, 20, 0.75)), 
             url("https://raw.githubusercontent.com/mamamooze/freelance-shield/main/background.png");
             background-size: cover;
@@ -112,6 +111,10 @@ st.markdown(
 # --- 3. SESSION STATE & LISTS ---
 if 'advance_rate' not in st.session_state:
     st.session_state.advance_rate = 50
+if 'slider_key' not in st.session_state:
+    st.session_state.slider_key = 50
+if 'num_key' not in st.session_state:
+    st.session_state.num_key = 50
 if 'scope_text' not in st.session_state:
     st.session_state.scope_text = ""
 
@@ -133,6 +136,13 @@ scope_templates = {
     "Web Development": "1. DELIVERABLE: 5-Page WordPress Site\n   - CRITERIA: Mobile responsive, Speed score >80.\n2. EXCLUSION: Domain and Hosting fees."
 }
 
+# Sync Functions
+def update_from_slider():
+    st.session_state.num_key = st.session_state.slider_key
+
+def update_from_num():
+    st.session_state.slider_key = st.session_state.num_key
+
 def update_scope():
     selection = st.session_state.template_selector
     if selection != "Select a template...":
@@ -148,10 +158,11 @@ with st.sidebar:
     st.info("✅ **MSME 3x Interest:** Section 16 Enforceable Clause.")
     st.info("✅ **Zero Data:** We don't store your clients' names.")
 
+    # --- FOUNDER'S MISSION SECTION (REPLACED TESTIMONIALS) ---
     st.markdown("---")
-    st.markdown("### ⭐ Testimonials")
-    st.caption('*\"Finally a contract that scares bad clients!\"* \n**- Rahul, Graphic Designer**')
-    st.caption('*\"Saved me ₹20k in late fees.\"* \n**- Anjali, Content Writer**')
+    st.markdown("### 👨‍⚖️ Why I Built This")
+    st.write("**Hi, I'm a Law Student.**")
+    st.caption("I saw too many freelancer friends get ghosted or cheated. I built this tool to give every Indian freelancer the legal protection usually reserved for big companies—for free.")
 
     st.markdown("---")
     st.markdown("### 🆘 Need Custom Help?")
@@ -220,7 +231,14 @@ with tab3:
     with c2:
         hourly_rate_num = st.number_input("Overtime Rate (INR/hr)", value=2000, step=500)
     with c3:
-        advance_percent = st.slider("Advance Required (%)", 0, 100, 50)
+        st.write("Advance Required (%)")
+        # FIXED SYNCED SLIDER/INPUT
+        sub_c1, sub_c2 = st.columns([3, 1])
+        with sub_c1:
+            st.slider("Slider", 0, 100, key="slider_key", on_change=update_from_slider, label_visibility="collapsed")
+        with sub_c2:
+            st.number_input("Num", 0, 100, key="num_key", on_change=update_from_num, label_visibility="collapsed")
+        advance_percent = st.session_state.slider_key
     
     st.info(f"ℹ️ **Calculation:** You will receive **Rs. {int(project_fee_num * (advance_percent/100)):,}** before starting work.")
 
@@ -234,21 +252,57 @@ with center_col[1]:
 # --- 8. LOGIC & OUTPUT ---
 if generate_btn:
     
-    # DATA PREP
-    safe_cost = f"Rs. {project_fee_num:,}"
-    safe_rate = f"Rs. {hourly_rate_num:,}"
-    safe_scope = st.session_state.scope_text.replace("₹", "Rs. ")
-    gst_text = "(Exclusive of GST)" if gst_registered else ""
-    
+    # LEGAL DATABASE (ENHANCED v2.0)
+    contract_clauses = {
+        "payment_terms": (
+            "1. PAYMENT TERMS & STATUTORY INTEREST (MSME ACT)\n"
+            f"Total Project Fee: Rs. {project_fee_num:,} {('(Exclusive of GST)' if gst_registered else '')}\n"
+            f"Advance Payment: {advance_percent}% (Non-refundable). Work commences only upon realization of advance.\n\n"
+            "STATUTORY NOTICE: Pursuant to the Micro, Small and Medium Enterprises Development Act, 2006 (MSMED Act), "
+            "time is of the essence regarding payments. Any outstanding balance must be cleared within forty-five (45) days.\n\n"
+            "LATE FEES: In the event of a delay, the Client shall be liable to pay compound interest with monthly rests to the Provider "
+            "at three times (3x) the bank rate notified by the Reserve Bank of India (Section 16, MSMED Act, 2006)."
+        ),
+        "termination": (
+            "2. TERMINATION & CANCELLATION\n"
+            "BY CLIENT: If the Client cancels the project or becomes unresponsive for >14 days ('Ghosting'), the Agreement is terminated by default. "
+            "The Advance Payment is forfeited as a cancellation fee.\n\n"
+            "BY PROVIDER: The Provider may terminate if the Client fails to make payments within agreed timelines or engages in abusive conduct. "
+            "In such cases, the Client remains liable for all work completed up to the date of termination."
+        ),
+        "ip_rights": (
+            "3. INTELLECTUAL PROPERTY RIGHTS & LIEN\n"
+            "The transfer of Intellectual Property Rights (IPR), copyright, and ownership of all source files, designs, and assets "
+            "is strictly conditional upon the full and final realization of the Total Project Fee. "
+            "Until the final invoice is cleared, the Provider retains a 'General Lien' and full legal title over all deliverables.\n\n"
+            "UNAUTHORIZED USE: Usage of the work product prior to full payment constitutes an unauthorized use and infringement of rights under the Copyright Act, 1957."
+        ),
+        "liability": (
+            "4. LIMITATION OF LIABILITY & WARRANTY\n"
+            "The Services are provided on an 'as-is' basis. The Provider makes no specific warranty regarding fitness for a particular purpose. "
+            "LIMITATION: The Provider's total liability under this Agreement shall strictly NOT EXCEED the Total Project Fee paid by the Client. "
+            "In no event shall the Provider be liable for indirect, consequential, or punitive damages."
+        ),
+        "jurisdiction": (
+            "5. DISPUTE RESOLUTION & JURISDICTION\n"
+            "This Agreement shall be governed by the laws of India. Any dispute shall first be attempted to be resolved amicably within 7 days.\n\n"
+            "Failing which, disputes shall be referred to Arbitration under the Arbitration and Conciliation Act, 1996. "
+            f"The seat of Arbitration and exclusive jurisdiction shall be the courts in {jurisdiction_city}, India."
+        )
+    }
+
     # BUILD TEXT
     full_contract_text = "PROFESSIONAL SERVICE AGREEMENT\n"
     full_contract_text += f"Date: {datetime.date.today().strftime('%B %d, %Y')}\n\n"
     full_contract_text += f"BETWEEN: {freelancer_name} (Provider) AND {client_name} (Client)\n"
     full_contract_text += "-"*60 + "\n\n"
-    full_contract_text += f"1. PAYMENT: Total Fee {safe_cost} {gst_text}. Advance: {advance_percent}%. Late payments attract 3x MSME Interest.\n\n"
-    full_contract_text += f"2. JURISDICTION: Disputes subject to courts in {jurisdiction_city}.\n\n"
-    full_contract_text += "3. IP RIGHTS: Client owns IP only AFTER full payment.\n\n"
-    full_contract_text += "4. TERMINATION: 14 days of silence = Ghosting (Contract ends, you keep advance).\n\n"
+    
+    # Add Clauses
+    full_contract_text += contract_clauses["payment_terms"] + "\n\n"
+    full_contract_text += contract_clauses["termination"] + "\n\n"
+    full_contract_text += contract_clauses["ip_rights"] + "\n\n"
+    full_contract_text += contract_clauses["liability"] + "\n\n"
+    full_contract_text += contract_clauses["jurisdiction"] + "\n\n"
     
     full_contract_text += "-"*60 + "\n"
     full_contract_text += "IN WITNESS WHEREOF, the parties have executed this Agreement.\n\n"
@@ -281,6 +335,9 @@ if generate_btn:
     pdf.cell(0, 10, "ANNEXURE A: SCOPE OF WORK", ln=True)
     pdf.ln(5)
     pdf.set_font("Arial", size=10)
+    
+    # Clean Scope Text
+    safe_scope = st.session_state.scope_text.replace("₹", "Rs. ")
     clean_scope = safe_scope.encode('latin-1', 'replace').decode('latin-1')
     pdf.multi_cell(0, 6, clean_scope)
     
